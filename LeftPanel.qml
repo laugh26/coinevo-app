@@ -238,9 +238,9 @@ Rectangle {
                     font.pixelSize: 16
                     text: {
                         if (persistentSettings.fiatPriceEnabled && persistentSettings.fiatPriceToggle) {
-                            return persistentSettings.fiatPriceCurrency == "xmrusd" ? "USD" : "EUR"
+                            return persistentSettings.fiatPriceCurrency == "wowusd" ? "$" : "€"
                         } else {
-                            return "XMR"
+                            return "⍵"
                         }
                     }
                     color: MoneroComponents.Style.blackTheme ? "white" : "black"
