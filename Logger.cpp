@@ -38,15 +38,15 @@
 #include "wallet/api/wallet2_api.h"
 
 // default log path by OS (should be writable)
-static const QString defaultLogName = "wownero-app.log";
+static const QString defaultLogName = "coinevo-app.log";
 #if defined(Q_OS_IOS)
     //AppDataLocation = "<APPROOT>/Library/Application Support"
     static const QString osPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(0);
-    static const QString appFolder = "wownero-app";
+    static const QString appFolder = "coinevo-app";
 #elif defined(Q_OS_WIN)
     //AppDataLocation = "C:/Users/<USER>/AppData/Roaming/<APPNAME>"
     static const QString osPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(0);
-    static const QString appFolder = "wownero-app";
+    static const QString appFolder = "coinevo-app";
 #elif defined(Q_OS_ANDROID)
     //AppDataLocation = "<USER>/<APPNAME>/files"
     static const QString osPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(1);
@@ -58,7 +58,7 @@ static const QString defaultLogName = "wownero-app.log";
 #else // linux + bsd
     //HomeLocation = "~"
     static const QString osPath = QStandardPaths::standardLocations(QStandardPaths::HomeLocation).at(0);
-    static const QString appFolder = ".wownero";
+    static const QString appFolder = ".coinevo";
 #endif
 
 

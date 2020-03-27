@@ -97,7 +97,7 @@ Rectangle {
             visible: parent.subtitle !== ""
 
             color: MoneroComponents.Style.dimmedFontColor
-            text: qsTr("Change the language of the Wownero App.") + translationManager.emptyString
+            text: qsTr("Change the language of the Coinevo App.") + translationManager.emptyString
 
             font.family: MoneroComponents.Style.fontRegular.name
             font.pixelSize: {

@@ -64,8 +64,8 @@ fi
 source ./utils.sh
 pushd $(pwd)
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-MONERO_DIR=wownero
-MONEROD_EXEC=wownerod
+MONERO_DIR=coinevo
+MONEROD_EXEC=coinevod
 
 MAKE='make'
 if [[ $platform == *bsd* ]]; then
@@ -93,9 +93,9 @@ if [ "$ANDROID" != true ] && ([ "$platform" == "linux32" ] || [ "$platform" == "
 fi
 
 if [ "$platform" == "darwin" ]; then
-    BIN_PATH=$BIN_PATH/wownero-app.app/Contents/MacOS/
+    BIN_PATH=$BIN_PATH/coinevo-app.app/Contents/MacOS/
 elif [ "$platform" == "mingw64" ] || [ "$platform" == "mingw32" ]; then
-    MONEROD_EXEC=wownerod.exe
+    MONEROD_EXEC=coinevod.exe
 fi
 
 # force version update
@@ -111,7 +111,7 @@ if ! QMAKE=$(find_command qmake qmake-qt5); then
     echo "Failed to find suitable qmake command."
     exit 1
 fi
-$QMAKE ../wownero-app.pro "$CONFIG" || exit
+$QMAKE ../coinevo-app.pro "$CONFIG" || exit
 $MAKE || exit 
 
 # Copy monerod to bin folder

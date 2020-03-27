@@ -8,12 +8,12 @@ ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $ROOT_DIR/utils.sh
 
 INSTALL_DIR=$ROOT_DIR/wallet
-MONERO_DIR=$ROOT_DIR/wownero
+MONERO_DIR=$ROOT_DIR/coinevo
 BUILD_LIBWALLET=false
 
 # init and update monero submodule
 if [ ! -d $MONERO_DIR/src ]; then
-    git submodule init wownero
+    git submodule init coinevo
 fi
 git submodule update --remote
 git -C $MONERO_DIR fetch
@@ -32,14 +32,14 @@ git -C $MONERO_DIR checkout -B $VERSIONTAG
 # Save current user settings and revert back when we are done with merging PR's
 OLD_GIT_USER=$(git -C $MONERO_DIR config --local user.name)
 OLD_GIT_EMAIL=$(git -C $MONERO_DIR config --local user.email)
-git -C $MONERO_DIR config user.name "Wownero App"
-git -C $MONERO_DIR config user.email "app@wownero.local"
+git -C $MONERO_DIR config user.name "Coinevo App"
+git -C $MONERO_DIR config user.email "app@coinevo.local"
 # check for PR requirements in most recent commit message (i.e requires #xxxx)
 for PR in $(git log --format=%B -n 1 | grep -io "requires #[0-9]*" | sed 's/[^0-9]*//g'); do
     echo "Merging monero push request #$PR"
     # fetch pull request and merge
     git -C $MONERO_DIR fetch origin pull/$PR/head:PR-$PR
-    git -C $MONERO_DIR merge --quiet PR-$PR  -m "Merge wownero PR #$PR"
+    git -C $MONERO_DIR merge --quiet PR-$PR  -m "Merge coinevo PR #$PR"
     BUILD_LIBWALLET=true
 done
 

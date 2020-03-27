@@ -237,7 +237,7 @@ Rectangle{
                     textMargin: 0
                     leftPadding: 0
                     topPadding: 0
-                    text: qsTr("Uses a third-party server to connect to the Wownero network. Less secure, but easier on your computer.") + translationManager.emptyString
+                    text: qsTr("Uses a third-party server to connect to the Coinevo network. Less secure, but easier on your computer.") + translationManager.emptyString
                     width: parent.width - (remoteNodeIcon.width + remoteNodeIcon.anchors.leftMargin + anchors.leftMargin)
                     readOnly: true
 
@@ -283,7 +283,7 @@ Rectangle{
             MoneroComponents.WarningBox {
                 Layout.topMargin: 26
                 Layout.bottomMargin: 6
-                text: qsTr("To find a remote node, ask on IRC #Wownero.") + translationManager.emptyString
+                text: qsTr("To find a remote node, ask on IRC #Coinevo.") + translationManager.emptyString
             }
 
             MoneroComponents.RemoteNodeEdit {

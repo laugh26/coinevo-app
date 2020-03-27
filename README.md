@@ -1,4 +1,4 @@
-# ~~Monero GUI~~ Wownero App
+# ~~Monero GUI~~ Coinevo App
 
 Copyright (c) 2014-2019, The Monero Project
 

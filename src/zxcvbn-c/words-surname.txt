@@ -48608,7 +48608,7 @@ wrighten
 wrich
 wozny
 wozney
-wowk
+evok
 wouters
 wormington
 worf
@@ -54897,7 +54897,7 @@ plagge
 placker
 placha
 pizira
-piwowar
+pievoar
 piwetz
 pittelkow
 pitta
@@ -83116,7 +83116,7 @@ kasemeier
 kasee
 kasal
 karz
-karwowski
+karevoski
 karstensen
 karroach
 karro

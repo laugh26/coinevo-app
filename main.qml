@@ -91,8 +91,8 @@ ApplicationWindow {
     property var fiatPriceAPIs: {
         return {
             "coingecko": {
-                "wowusd": "https://api.coingecko.com/api/v3/simple/price?ids=wownero&vs_currencies=usd",
-                "woweur": "https://api.coingecko.com/api/v3/simple/price?ids=wownero&vs_currencies=eur"
+                "evousd": "https://api.coingecko.com/api/v3/simple/price?ids=coinevo&vs_currencies=usd",
+                "evoeur": "https://api.coingecko.com/api/v3/simple/price?ids=coinevo&vs_currencies=eur"
             }
         }
     }
@@ -417,8 +417,8 @@ ApplicationWindow {
     }
 
     function onUriHandler(uri){
-        if(uri.startsWith("wownero://")){
-            var address = uri.substring("wownero://".length);
+        if(uri.startsWith("coinevo://")){
+            var address = uri.substring("coinevo://".length);
 
             var params = {}
             if(address.length === 0) return;
@@ -709,7 +709,7 @@ ApplicationWindow {
         currentWallet.startRefresh();
         daemonRunning = false;
         informationPopup.title = qsTr("Daemon failed to start") + translationManager.emptyString;
-        informationPopup.text  = qsTr("Please check your wallet and daemon log for errors. You can also try to start %1 manually.").arg((isWindows)? "wownerod.exe" : "wownerod")
+        informationPopup.text  = qsTr("Please check your wallet and daemon log for errors. You can also try to start %1 manually.").arg((isWindows)? "coinevod.exe" : "coinevod")
         informationPopup.icon  = StandardIcon.Critical
         informationPopup.onCloseCallback = null
         informationPopup.open();
@@ -1146,18 +1146,18 @@ ApplicationWindow {
                 return;
             }
 
-            var key = currency === "woweur" ? "XXMRZEUR" : "XXMRZUSD";
+            var key = currency === "evoeur" ? "XXMRZEUR" : "XXMRZUSD";
             var ticker = resp.result[key]["o"];
             return ticker;
         } else if(resp._url.startsWith("https://api.coingecko.com/api/v3/")){
-            var key = currency === "woweur" ? "eur" : "usd";
-            if(!resp.hasOwnProperty("wownero") || !resp["wownero"].hasOwnProperty(key)){
+            var key = currency === "evoeur" ? "eur" : "usd";
+            if(!resp.hasOwnProperty("coinevo") || !resp["coinevo"].hasOwnProperty(key)){
                 appWindow.fiatApiError("Coingecko API has error(s)");
                 return;
             }
-            return resp["wownero"][key];
+            return resp["coinevo"][key];
         } else if(resp._url.startsWith("https://min-api.cryptocompare.com/data/")){
-            var key = currency === "woweur" ? "EUR" : "USD";
+            var key = currency === "evoeur" ? "EUR" : "USD";
             if(!resp.hasOwnProperty(key)){
                 appWindow.fiatApiError("cryptocompare API has error(s)");
                 return;
@@ -1323,7 +1323,7 @@ ApplicationWindow {
         id: persistentSettings
         fileName: {
             if(isTails && tailsUsePersistence)
-                return homePath + "/Persistent/Wownero/wownero-app.conf";
+                return homePath + "/Persistent/Coinevo/coinevo-app.conf";
             return "";
         }
 
@@ -1368,7 +1368,7 @@ ApplicationWindow {
         property bool fiatPriceEnabled: false
         property bool fiatPriceToggle: false
         property string fiatPriceProvider: "coingecko"
-        property string fiatPriceCurrency: "wowusd"
+        property string fiatPriceCurrency: "evousd"
 
         Component.onCompleted: {
             MoneroComponents.Style.blackTheme = persistentSettings.blackTheme
@@ -1964,9 +1964,9 @@ ApplicationWindow {
             var download_url = base_url + osBuildTag + "-v" + version + extension
             var msg = ""
             if (osBuildTag !== "unknownBuildTag") {
-                msg = qsTr("New version of Wownero v.%1 is available.<br><br>Download:<br>%2<br><br>SHA256 Hash:<br>%3").arg(version).arg(download_url).arg(hash) + translationManager.emptyString
+                msg = qsTr("New version of Coinevo v.%1 is available.<br><br>Download:<br>%2<br><br>SHA256 Hash:<br>%3").arg(version).arg(download_url).arg(hash) + translationManager.emptyString
             } else {
-                msg = qsTr("New version of Wownero is available. Check out wownero.org") + translationManager.emptyString
+                msg = qsTr("New version of Coinevo is available. Check out coinevo.tech") + translationManager.emptyString
             }
             notifier.show(msg)
         } else {
@@ -1975,7 +1975,7 @@ ApplicationWindow {
     }
 
     function checkUpdates() {
-        walletManager.checkUpdatesAsync("wownero-app", "app")
+        walletManager.checkUpdatesAsync("coinevo-app", "app")
     }
 
     Timer {

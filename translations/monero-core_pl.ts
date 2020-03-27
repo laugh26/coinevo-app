@@ -2263,7 +2263,7 @@ Uaktualnij go lub podłącz się do innego demona</translation>
     <message>
         <location filename="../pages/Transfer.qml" line="389"/>
         <source>You can enable transfers with payment ID on the settings page.</source>
-        <translation>Możesz aktywować wysyłanie z ID płatności w ustawieniach.</translation>
+        <translation>Możesz aktyevoać wysyłanie z ID płatności w ustawieniach.</translation>
     </message>
     <message>
         <location filename="../pages/Transfer.qml" line="459"/>
@@ -2869,7 +2869,7 @@ your input may be required.</source>
     <message>
         <location filename="../wizard/WizardModeRemoteNodeWarning.qml" line="72"/>
         <source>This mode is ideal for managing small amounts of Monero. You have access to basic features for making and managing transactions. It will automatically connect to the Monero network so you can start using Monero immediately.</source>
-        <translation>Ten tryb jest idealny dla niskich kwot w Monero. Masz dostęp do podstawowych funkcji aby otrzymywać oraz wysyłać transakcje. Automatycznie połączy cie z siecią Monero i natychmiast będziesz w stanie korzystać z Monero.</translation>
+        <translation>Ten tryb jest idealny dla niskich kwot w Monero. Masz dostęp do podstaevoych funkcji aby otrzymywać oraz wysyłać transakcje. Automatycznie połączy cie z siecią Monero i natychmiast będziesz w stanie korzystać z Monero.</translation>
     </message>
     <message>
         <location filename="../wizard/WizardModeRemoteNodeWarning.qml" line="85"/>
@@ -2913,12 +2913,12 @@ your input may be required.</source>
     <message>
         <location filename="../wizard/WizardModeSelection.qml" line="71"/>
         <source>Easy access to sending, receiving and basic functionality.</source>
-        <translation>Łatwy dostęp do wysyłania, otrzymywania i podstawowych funkcji.</translation>
+        <translation>Łatwy dostęp do wysyłania, otrzymywania i podstaevoych funkcji.</translation>
     </message>
     <message>
         <location filename="../wizard/WizardModeSelection.qml" line="102"/>
         <source>Easy access to sending, receiving and basic functionality. The blockchain is downloaded to your computer.</source>
-        <translation>Łatwy dostęp do wysyłania, otrzymywania i podstawowych funkcji. Blockchain jest ściągana na twój komputer.</translation>
+        <translation>Łatwy dostęp do wysyłania, otrzymywania i podstaevoych funkcji. Blockchain jest ściągana na twój komputer.</translation>
     </message>
     <message>
         <location filename="../wizard/WizardModeSelection.qml" line="128"/>

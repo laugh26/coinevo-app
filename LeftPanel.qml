@@ -238,7 +238,7 @@ Rectangle {
                     font.pixelSize: 16
                     text: {
                         if (persistentSettings.fiatPriceEnabled && persistentSettings.fiatPriceToggle) {
-                            return persistentSettings.fiatPriceCurrency == "wowusd" ? "$" : "€"
+                            return persistentSettings.fiatPriceCurrency == "evousd" ? "$" : "€"
                         } else {
                             return "EVO"
                         }

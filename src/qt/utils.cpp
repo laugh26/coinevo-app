@@ -63,7 +63,7 @@ QString getAccountName(){
     if (accountName.isEmpty())
         accountName = qgetenv("USERNAME"); // Windows
     if (accountName.isEmpty())
-        accountName = "My wownero Account";
+        accountName = "My coinevo Account";
     return accountName;
 }
 
@@ -71,11 +71,11 @@ QString getAccountName(){
 QString xdgMime(QApplication &app){
     return QString(
         "[Desktop Entry]\n"
-        "Name=Wownero App\n"
-        "GenericName=Wownero App\n"
-        "X-GNOME-FullName=Wownero-App\n"
-        "Comment=Wownero App\n"
-        "Keywords=Wownero;\n"
+        "Name=Coinevo App\n"
+        "GenericName=Coinevo App\n"
+        "X-GNOME-FullName=Coinevo-App\n"
+        "Comment=Coinevo App\n"
+        "Keywords=Coinevo;\n"
         "Exec=%1 %u\n"
         "Terminal=false\n"
         "Type=Application\n"
@@ -96,7 +96,7 @@ void registerXdgMime(QApplication &app){
     // - Tails written to persistent dotfiles
     QString mime = xdgMime(app);
     QString appPath = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation);
-    QString filePath = QString("%1/wownero-app.desktop").arg(appPath);
+    QString filePath = QString("%1/coinevo-app.desktop").arg(appPath);
 
     if (TailsOS::detect() && TailsOS::detectDotPersistence() && TailsOS::usePersistence) {
         TailsOS::persistXdgMime(filePath, mime);
@@ -116,13 +116,13 @@ void registerXdgMime(QApplication &app){
 
 QString randomUserAgent(){
     QStringList urand;
-    urand << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1"
+    urand << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:40.0) Gecko/20100101 Firefox/40.1"
           << "Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0"
           << "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10; rv:33.0) Gecko/20100101 Firefox/33.0"
           << "Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/31.0"
-          << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20130401 Firefox/31.0"
+          << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:31.0) Gecko/20130401 Firefox/31.0"
           << "Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0"
-          << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:29.0) Gecko/20120101 Firefox/29.0"
+          << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:29.0) Gecko/20120101 Firefox/29.0"
           << "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/29.0"
           << "Mozilla/5.0 (X11; OpenBSD amd64; rv:28.0) Gecko/20100101 Firefox/28.0"
           << "Mozilla/5.0 (X11; Linux x86_64; rv:28.0) Gecko/20100101  Firefox/28.0"
@@ -131,10 +131,10 @@ QString randomUserAgent(){
           << "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
           << "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:25.0) Gecko/20100101 Firefox/25.0"
           << "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0"
-          << "Mozilla/5.0 (Windows NT 6.0; WOW64; rv:24.0) Gecko/20100101 Firefox/24.0"
+          << "Mozilla/5.0 (Windows NT 6.0; EVO64; rv:24.0) Gecko/20100101 Firefox/24.0"
           << "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20100101 Firefox/24.0"
           << "Mozilla/5.0 (Windows NT 6.2; rv:22.0) Gecko/20130405 Firefox/23.0"
-          << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0"
+          << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:23.0) Gecko/20130406 Firefox/23.0"
           << "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:23.0) Gecko/20131011 Firefox/23.0"
           << "Mozilla/5.0 (Windows NT 6.2; rv:22.0) Gecko/20130405 Firefox/22.0"
           << "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:22.0) Gecko/20130328 Firefox/22.0"
@@ -146,12 +146,12 @@ QString randomUserAgent(){
           << "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:21.0) Gecko/20130331 Firefox/21.0"
           << "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:21.0) Gecko/20100101 Firefox/21.0"
           << "Mozilla/5.0 (X11; Linux i686; rv:21.0) Gecko/20100101 Firefox/21.0"
-          << "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:21.0) Gecko/20130514 Firefox/21.0"
+          << "Mozilla/5.0 (Windows NT 6.2; EVO64; rv:21.0) Gecko/20130514 Firefox/21.0"
           << "Mozilla/5.0 (Windows NT 6.2; rv:21.0) Gecko/20130326 Firefox/21.0"
-          << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20130401 Firefox/21.0"
-          << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20130331 Firefox/21.0"
-          << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20130330 Firefox/21.0"
-          << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0"
+          << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:21.0) Gecko/20130401 Firefox/21.0"
+          << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:21.0) Gecko/20130331 Firefox/21.0"
+          << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:21.0) Gecko/20130330 Firefox/21.0"
+          << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:21.0) Gecko/20100101 Firefox/21.0"
           << "Mozilla/5.0 (Windows NT 6.1; rv:21.0) Gecko/20130401 Firefox/21.0"
           << "Mozilla/5.0 (Windows NT 6.1; rv:21.0) Gecko/20130328 Firefox/21.0"
           << "Mozilla/5.0 (Windows NT 6.1; rv:21.0) Gecko/20100101 Firefox/21.0"
@@ -164,17 +164,17 @@ QString randomUserAgent(){
           << "Mozilla/5.0 (Windows x86; rv:19.0) Gecko/20100101 Firefox/19.0"
           << "Mozilla/5.0 (Windows NT 6.1; rv:6.0) Gecko/20100101 Firefox/19.0"
           << "Mozilla/5.0 (Windows NT 6.1; rv:14.0) Gecko/20100101 Firefox/18.0.1"
-          << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0)  Gecko/20100101 Firefox/18.0"
+          << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:18.0)  Gecko/20100101 Firefox/18.0"
           << "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:17.0) Gecko/20100101 Firefox/17.0.6"
           << "Mozilla/5.0 (X11; Ubuntu; Linux armv7l; rv:17.0) Gecko/20100101 Firefox/17.0"
-          << "Mozilla/6.0 (Windows NT 6.2; WOW64; rv:16.0.1) Gecko/20121011 Firefox/16.0.1"
-          << "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:16.0.1) Gecko/20121011 Firefox/16.0.1"
+          << "Mozilla/6.0 (Windows NT 6.2; EVO64; rv:16.0.1) Gecko/20121011 Firefox/16.0.1"
+          << "Mozilla/5.0 (Windows NT 6.2; EVO64; rv:16.0.1) Gecko/20121011 Firefox/16.0.1"
           << "Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:16.0.1) Gecko/20121011 Firefox/16.0.1"
           << "Mozilla/5.0 (X11; NetBSD amd64; rv:16.0) Gecko/20121102 Firefox/16.0"
           << "Mozilla/5.0 (Windows NT 6.1; rv:15.0) Gecko/20120716 Firefox/15.0a2"
           << "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.16) Gecko/20120427 Firefox/15.0a1"
-          << "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:15.0) Gecko/20120427 Firefox/15.0a1"
-          << "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:15.0) Gecko/20120910144328 Firefox/15.0.2"
+          << "Mozilla/5.0 (Windows NT 6.1; EVO64; rv:15.0) Gecko/20120427 Firefox/15.0a1"
+          << "Mozilla/5.0 (Windows NT 6.2; EVO64; rv:15.0) Gecko/20120910144328 Firefox/15.0.2"
           << "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:15.0) Gecko/20100101 Firefox/15.0.1"
           << "Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:15.0) Gecko/20121011 Firefox/15.0.1"
           << "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:14.0) Gecko/20120405 Firefox/14.0a1"
@@ -182,7 +182,7 @@ QString randomUserAgent(){
           << "Mozilla/5.0 (Windows NT 5.1; rv:14.0) Gecko/20120405 Firefox/14.0a1"
           << "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:14.0) Gecko/20100101 Firefox/14.0.1"
           << "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:14.0) Gecko/20100101 Firefox/14.0.1"
-          << "Mozilla/5.0 (Windows; U; Windows NT 6.1; WOW64; en-US; rv:2.0.4) Gecko/20120718 AskTbAVR-IDW/3.12.5.17700 Firefox/14.0.1"
+          << "Mozilla/5.0 (Windows; U; Windows NT 6.1; EVO64; en-US; rv:2.0.4) Gecko/20120718 AskTbAVR-IDW/3.12.5.17700 Firefox/14.0.1"
           << "Mozilla/5.0 (Windows NT 6.1; rv:12.0) Gecko/20120403211507 Firefox/14.0.1"
           << "Mozilla/5.0 (Windows NT 6.1; rv:12.0) Gecko/ 20120405 Firefox/14.0.1"
           << "Mozilla/5.0 (Windows NT 6.0; rv:14.0) Gecko/20100101 Firefox/14.0.1"

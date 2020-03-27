@@ -2,4 +2,4 @@
 
 set QMLSCENE_DEVICE=softwarecontext
 
-start /b wownero-app.exe
+start /b coinevo-app.exe
