@@ -315,7 +315,7 @@ Rectangle {
                                  Address") + translationManager.emptyString
                 placeholderText: {
                     if(persistentSettings.nettype == NetworkType.MAINNET){
-                        return "Wo.. / WW.. / OpenAlias";
+                        return "4.. / 8.. / OpenAlias";
                     } else if (persistentSettings.nettype == NetworkType.STAGENET){
                         return "5.. / 7..";
                     } else if(persistentSettings.nettype == NetworkType.TESTNET){

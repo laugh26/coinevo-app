@@ -240,7 +240,7 @@ Rectangle {
                         if (persistentSettings.fiatPriceEnabled && persistentSettings.fiatPriceToggle) {
                             return persistentSettings.fiatPriceCurrency == "wowusd" ? "$" : "€"
                         } else {
-                            return "⍵"
+                            return "EVO"
                         }
                     }
                     color: MoneroComponents.Style.blackTheme ? "white" : "black"

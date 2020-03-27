@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     MainApp app(argc, argv);
 
     app.setApplicationName("wownero-app");
-    app.setOrganizationDomain("wownero.org");
+    app.setOrganizationDomain("coinevo.tech");
     app.setOrganizationName("wownero-project");
 
     // Ask to enable Tails OS persistence mode, it affects:

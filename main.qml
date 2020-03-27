@@ -78,7 +78,7 @@ ApplicationWindow {
     readonly property string localDaemonAddress : "localhost:" + getDefaultDaemonRpcPort(persistentSettings.nettype)
     property string currentDaemonAddress;
     property int disconnectedEpoch: 0
-    property int estimatedBlockchainSize: 2 // GB
+    property int estimatedBlockchainSize: 75 // GB
     property alias viewState: rootItem.state
     property string prevSplashText;
     property bool splashDisplayedBeforeButtonRequest;
@@ -1354,7 +1354,7 @@ ApplicationWindow {
         property string blockchainDataDir: ""
         property bool useRemoteNode: false
         property string remoteNodeAddress: ""
-        property string bootstrapNodeAddress: "node.wowne.ro:34568"
+        property string bootstrapNodeAddress: "mobile3.coinevo.tech"
         property bool segregatePreForkOutputs: false
         property bool keyReuseMitigation2: false
         property int segregationHeight: 0
@@ -1960,7 +1960,7 @@ ApplicationWindow {
             //var auto_url = parts[3]
             var osBuildTag = isMac ? "mac-x64" : isWindows ? "win-x64" : isLinux ? "linux-x64" : "unknownBuildTag"
             var extension = isMac || isLinux ? ".tar.bz2" : isWindows ? ".zip" : ".unknownExtension"
-            var base_url = ""
+            var base_url = "https://downloads.coinevo.tech/gui/coinevo-gui"
             var download_url = base_url + osBuildTag + "-v" + version + extension
             var msg = ""
             if (osBuildTag !== "unknownBuildTag") {
@@ -2036,11 +2036,11 @@ ApplicationWindow {
     function getDefaultDaemonRpcPort(networkType) {
         switch (networkType) {
             case NetworkType.STAGENET:
-                return 38081;
+                return 55551;
             case NetworkType.TESTNET:
-                return 11181;
+                return 44441;
             default:
-                return 34568;
+                return 33331;
         }
     }
 

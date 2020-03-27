@@ -49,7 +49,7 @@ Rectangle {
     color: "transparent"
     property alias transferHeight1: pageRoot.height
     property alias transferHeight2: advancedLayout.height
-    property int mixin: 21  // (ring size 22)
+    property int mixin: 10  // (ring size 11)
     property string warningContent: ""
     property string sendButtonWarning: ""
     property string startLinkText: qsTr("<style type='text/css'>a {text-decoration: none; color: #FF6C3C; font-size: 14px;}</style><font size='2'> (</font><a href='#'>Start daemon</a><font size='2'>)</font>") + translationManager.emptyString
@@ -89,7 +89,7 @@ Rectangle {
 
     function isLongPidService(text) {
         // @TODO: remove after pid removal hardfork
-        return text.length == 97 &&
+        return text.length == 95 &&
                [ "44tLjmXrQNrWJ5NBsEj2R77ZBEgDa3fEe9GLpSf2FRmhexPvfYDUAB7EXX1Hdb3aMQ9FLqdJ56yaAhiXoRsceGJCRS3Jxkn", // Binance
                  "4AQ3ZREb53FMYKBmpPn7BD7hphPk6G1ceinQX6gefAvhFJsNbeFsGwebZWCNxoJAbZhD9cjetBAqmLhfXmcNLBpPMsBL6yM", // KuCoin
                  "47YzEcMrU2S42UitURo7ukUDaSaL485Z1QbmFgq1vSs5g3JesL4rChwWf2uWk1va99JAaRxt65jhX9uAqQnjeFM44ckgZtp", // AnycoinDirect
@@ -239,7 +239,7 @@ Rectangle {
               labelButtonText: qsTr("Resolve") + translationManager.emptyString
               placeholderText: {
                   if(persistentSettings.nettype == NetworkType.MAINNET){
-                      return "Wo.. / WW.. / OpenAlias";
+                      return "4.. / 8.. / OpenAlias";
                   } else if (persistentSettings.nettype == NetworkType.STAGENET){
                       return "5.. / 7..";
                   } else if(persistentSettings.nettype == NetworkType.TESTNET){

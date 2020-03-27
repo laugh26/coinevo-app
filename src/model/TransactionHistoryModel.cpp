@@ -134,7 +134,7 @@ QVariant TransactionHistoryModel::data(const QModelIndex &index, int role) const
         result = tInfo->confirmations();
         break;
     case TransactionConfirmationsRequiredRole:
-        result = (tInfo->blockHeight() < tInfo->unlockTime()) ? tInfo->unlockTime() - tInfo->blockHeight() : 4;
+        result = (tInfo->blockHeight() < tInfo->unlockTime()) ? tInfo->unlockTime() - tInfo->blockHeight() : 10;
         break;
     case TransactionHashRole:
         result = tInfo->hash();

@@ -1,5 +1,5 @@
 #!/bin/bash
-MONERO_URL=https://github.com/wownero/wownero.git
+MONERO_URL=https://github.com/laugh26/coinevo.git
 MONERO_BRANCH=master
 
 pushd $(pwd)
@@ -254,6 +254,6 @@ if [ -d $MONERO_DIR/build/$BUILD_TYPE/external/unbound ]; then
 fi
 
 # install randomx
-eval make -C $MONERO_DIR/build/$BUILD_TYPE/external/RandomWOW all install
+eval make -C $MONERO_DIR/build/$BUILD_TYPE/external/randomx all install
 
 popd
