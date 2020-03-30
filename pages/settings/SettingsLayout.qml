@@ -37,8 +37,8 @@ import "../../components" as MoneroComponents
 
 Rectangle {
     color: "transparent"
-    height: 1400
     Layout.fillWidth: true
+    property alias layoutHeight: settingsUI.height
 
     ColumnLayout {
         id: settingsUI
@@ -72,6 +72,7 @@ Rectangle {
             id: themeCheckbox
             checked: !MoneroComponents.Style.blackTheme
             text: qsTr("Light theme") + translationManager.emptyString
+            toggleOnClick: false
             onClicked: {
                 MoneroComponents.Style.blackTheme = !MoneroComponents.Style.blackTheme;
                 persistentSettings.blackTheme = MoneroComponents.Style.blackTheme;
@@ -92,7 +93,8 @@ Rectangle {
             Layout.leftMargin: 42
             spacing: 0
 
-            MoneroComponents.TextBlock {
+            Text {
+                color: MoneroComponents.Style.defaultFontColor
                 font.pixelSize: 14
                 Layout.fillWidth: true
                 text: {
@@ -141,6 +143,12 @@ Rectangle {
                 }
 
                 onMoved: persistentSettings.lockOnUserInActivityInterval = userInactivitySlider.value;
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.NoButton
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
         }
 
@@ -290,7 +298,7 @@ Rectangle {
         }
 
         fiatPriceProviderDropDown.update();
-        fiatPriceCurrencyDropdown.currentIndex = persistentSettings.fiatPriceCurrency === "xmrusd" ? 0 : 1;
+        fiatPriceCurrencyDropdown.currentIndex = persistentSettings.fiatPriceCurrency === "evousd" ? 0 : 1;
         fiatPriceCurrencyDropdown.update();
 
         console.log('SettingsLayout loaded');

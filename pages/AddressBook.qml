@@ -67,21 +67,18 @@ Rectangle {
             spacing: 0
             Layout.fillWidth: true
 
-            TextArea {
+            Text {
                 id: titleLabel
                 Layout.fillWidth: true
                 color: MoneroComponents.Style.defaultFontColor
                 font.family: MoneroComponents.Style.fontRegular.name
                 font.pixelSize: 32
                 horizontalAlignment: TextInput.AlignLeft
-                selectByMouse: false
                 wrapMode: Text.WordWrap;
-                textMargin: 0
                 leftPadding: 0
                 topPadding: 0
                 text: qsTr("Save your most used addresses here") + translationManager.emptyString
                 width: parent.width
-                readOnly: true
 
                 // @TODO: Legacy. Remove after Qt 5.8.
                 // https://stackoverflow.com/questions/41990013
@@ -91,20 +88,17 @@ Rectangle {
                 }
             }
 
-            TextArea {
+            Text {
                 Layout.fillWidth: true
                 color: MoneroComponents.Style.dimmedFontColor
                 font.family: MoneroComponents.Style.fontRegular.name
                 font.pixelSize: 16
                 horizontalAlignment: TextInput.AlignLeft
-                selectByMouse: false
                 wrapMode: Text.WordWrap;
-                textMargin: 0
                 leftPadding: 0
                 topPadding: 0
                 text: qsTr("This makes it easier to send or receive Coinevo and reduces errors when typing in addresses manually.") + translationManager.emptyString
                 width: parent.width
-                readOnly: true
 
                 // @TODO: Legacy. Remove after Qt 5.8.
                 // https://stackoverflow.com/questions/41990013
@@ -284,8 +278,9 @@ Rectangle {
             MoneroComponents.CheckBox {
                 id: addNewEntryCheckbox
                 border: false
-                checkedIcon: "qrc:///images/plus-in-circle-medium-white.png"
-                uncheckedIcon: "qrc:///images/plus-in-circle-medium-white.png"
+                uncheckedIcon: FontAwesome.plusCircle
+                toggleOnClick: false
+                fontAwesomeIcons: true
                 fontSize: 16
                 iconOnTheLeft: true
                 Layout.fillWidth: true
@@ -311,8 +306,8 @@ Rectangle {
             MoneroComponents.LineEditMulti {
                 id: addressLine
                 Layout.topMargin: 20
-                labelText: qsTr("<style type='text/css'>a {text-decoration: none; color: #858585; font-size: 14px;}</style>\
-                                 Address") + translationManager.emptyString
+                labelText: "<style type='text/css'>a {text-decoration: none; color: #858585; font-size: 14px;}</style> %1"
+                    .arg(qsTr("Address")) + translationManager.emptyString
                 placeholderText: {
                     if(persistentSettings.nettype == NetworkType.MAINNET){
                         return "4.. / 8.. / OpenAlias";
@@ -325,8 +320,8 @@ Rectangle {
                 wrapMode: Text.WrapAnywhere
                 addressValidation: true
                 pasteButton: true
-                onPaste: function(clipboardText) {
-                    const parsed = walletManager.parse_uri_to_object(clipboardText);
+                onTextChanged: {
+                    const parsed = walletManager.parse_uri_to_object(addressLine.text);
                     if (!parsed.error) {
                         addressLine.text = parsed.address;
                         descriptionLine.text = parsed.tx_description;
@@ -389,8 +384,8 @@ Rectangle {
             MoneroComponents.LineEditMulti {
                 id: descriptionLine
                 Layout.topMargin: 20
-                labelText: qsTr("<style type='text/css'>a {text-decoration: none; color: #858585; font-size: 14px;}</style>\
-                                 Description") + translationManager.emptyString
+                labelText: "<style type='text/css'>a {text-decoration: none; color: #858585; font-size: 14px;}</style> %1"
+                    .arg(qsTr("Description")) + translationManager.emptyString
                 placeholderText: qsTr("Add a name...") + translationManager.emptyString
             }
             RowLayout {

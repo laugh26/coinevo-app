@@ -27,6 +27,7 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "DaemonManager.h"
+#include <QElapsedTimer>
 #include <QFile>
 #include <QThread>
 #include <QFileInfo>
@@ -36,26 +37,27 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QApplication>
 #include <QProcess>
-#include <QTime>
 #include <QStorageInfo>
 #include <QVariantMap>
 #include <QVariant>
 #include <QMap>
 
 namespace {
-    static const int DAEMON_START_TIMEOUT_SECONDS = 60;
+    static const int DAEMON_START_TIMEOUT_SECONDS = 120;
 }
 
 DaemonManager * DaemonManager::m_instance = nullptr;
 QStringList DaemonManager::m_clArgs;
 
-DaemonManager *DaemonManager::instance(const QStringList *args)
+DaemonManager *DaemonManager::instance(const QStringList *args/* = nullptr*/)
 {
     if (!m_instance) {
         m_instance = new DaemonManager;
         // store command line arguments for later use
-        m_clArgs = *args;
-        m_clArgs.removeFirst();
+        if (args != nullptr)
+        {
+            m_clArgs = *args;
+        }
     }
 
     return m_instance;
@@ -63,7 +65,13 @@ DaemonManager *DaemonManager::instance(const QStringList *args)
 
 bool DaemonManager::start(const QString &flags, NetworkType::Type nettype, const QString &dataDir, const QString &bootstrapNodeAddress, bool noSync /* = false*/)
 {
-    // prepare command line arguments and pass to monerod
+    if (!QFileInfo(m_monerod).isFile())
+    {
+        emit daemonStartFailure("\"" + QDir::toNativeSeparators(m_monerod) + "\" " + tr("executable is missing"));
+        return false;
+    }
+
+    // prepare command line arguments and pass to coinevod
     QStringList arguments;
 
     // Start daemon with --detach flag on non-windows platforms
@@ -122,7 +130,7 @@ bool DaemonManager::start(const QString &flags, NetworkType::Type nettype, const
     connect (m_daemon, SIGNAL(readyReadStandardOutput()), this, SLOT(printOutput()));
     connect (m_daemon, SIGNAL(readyReadStandardError()), this, SLOT(printError()));
 
-    // Start monerod
+    // Start coinevod
     bool started = m_daemon->startDetached(m_monerod, arguments);
 
     // add state changed listener
@@ -130,7 +138,7 @@ bool DaemonManager::start(const QString &flags, NetworkType::Type nettype, const
 
     if (!started) {
         qDebug() << "Daemon start error: " + m_daemon->errorString();
-        emit daemonStartFailure();
+        emit daemonStartFailure(m_daemon->errorString());
         return false;
     }
 
@@ -140,35 +148,33 @@ bool DaemonManager::start(const QString &flags, NetworkType::Type nettype, const
             emit daemonStarted();
             m_noSync = noSync;
         } else {
-            emit daemonStartFailure();
+            emit daemonStartFailure(tr("Timed out, local node is not responding after %1 seconds").arg(DAEMON_START_TIMEOUT_SECONDS));
         }
     });
 
     return true;
 }
 
-bool DaemonManager::stop(NetworkType::Type nettype)
+void DaemonManager::stopAsync(NetworkType::Type nettype, const QJSValue& callback)
 {
-    QString message;
-    sendCommand({"exit"}, nettype, message);
-    qDebug() << message;
+    const auto feature = m_scheduler.run([this, nettype] {
+        QString message;
+        sendCommand({"exit"}, nettype, message);
 
-    // Start stop watcher - Will kill if not shutting down
-    m_scheduler.run([this, nettype] {
-        if (stopWatcher(nettype))
-        {
-            emit daemonStopped();
-        }
-    });
+        return QJSValueList({stopWatcher(nettype)});
+    }, callback);
 
-    return true;
+    if (!feature.first)
+    {
+        QJSValue(callback).call(QJSValueList({false}));
+    }
 }
 
 bool DaemonManager::startWatcher(NetworkType::Type nettype) const
 {
     // Check if daemon is started every 2 seconds
-    QTime timer;
-    timer.restart();
+    QElapsedTimer timer;
+    timer.start();
     while(true && !m_app_exit && timer.elapsed() / 1000 < DAEMON_START_TIMEOUT_SECONDS  ) {
         QThread::sleep(2);
         if(!running(nettype)) {
@@ -308,7 +314,7 @@ QVariantMap DaemonManager::validateDataDir(const QString &dataDir) const
             valid = false;
         }
 
-        // Make sure there is 5GB storage available
+        // Make sure there is 75GB storage available
         storageAvailable = storage.bytesAvailable()/1000/1000/1000;
         if (storageAvailable < 75) {
             valid = false;
@@ -336,7 +342,7 @@ DaemonManager::DaemonManager(QObject *parent)
     , m_scheduler(this)
 {
 
-    // Platform depetent path to monerod
+    // Platform depetent path to coinevod
 #ifdef Q_OS_WIN
     m_monerod = QApplication::applicationDirPath() + "/coinevod.exe";
 #elif defined(Q_OS_UNIX)

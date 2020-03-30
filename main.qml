@@ -31,6 +31,7 @@ import QtQuick.Window 2.0
 import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
 import QtQuick.Dialogs 1.2
+import QtGraphicalEffects 1.0
 
 import moneroComponents.Wallet 1.0
 import moneroComponents.PendingTransaction 1.0
@@ -47,22 +48,24 @@ import "js/Windows.js" as Windows
 
 ApplicationWindow {
     id: appWindow
-    title: "Monero"
+    title: "Coinevo" + (walletName ? " - " + walletName : "")
+    minimumWidth: 750
+    minimumHeight: 450
 
     property var currentItem
     property bool hideBalanceForced: false
     property bool ctrlPressed: false
     property alias persistentSettings : persistentSettings
     property var currentWallet;
+    property bool disconnected: currentWallet ? currentWallet.disconnected : false
     property var transaction;
     property var transactionDescription;
     property var walletPassword
-    property bool isNewWallet: false
     property int restoreHeight:0
     property bool daemonSynced: false
     property bool walletSynced: false
     property int maxWindowHeight: (isAndroid || isIOS)? screenHeight : (screenHeight < 900)? 720 : 800;
-    property bool daemonRunning: false
+    property bool daemonRunning: !persistentSettings.useRemoteNode && !disconnected
     property alias toolTip: toolTip
     property string walletName
     property bool viewOnly: false
@@ -86,13 +89,21 @@ ApplicationWindow {
     property bool themeTransition: false
 
     // fiat price conversion
-    property int fiatPriceXMRUSD: 0
-    property int fiatPriceXMREUR: 0
+    property real fiatPriceXMRUSD: 0
+    property real fiatPriceXMREUR: 0
     property var fiatPriceAPIs: {
         return {
+            "kraken": {
+                "evousd": "https://api.kraken.com/0/public/Ticker?pair=EVOUSD",
+                "evoeur": "https://api.kraken.com/0/public/Ticker?pair=EVOEUR"
+            },
             "coingecko": {
                 "evousd": "https://api.coingecko.com/api/v3/simple/price?ids=coinevo&vs_currencies=usd",
                 "evoeur": "https://api.coingecko.com/api/v3/simple/price?ids=coinevo&vs_currencies=eur"
+            },
+            "cryptocompare": {
+                "evousd": "https://min-api.cryptocompare.com/data/price?fsym=EVO&tsyms=USD",
+                "evoeur": "https://min-api.cryptocompare.com/data/price?fsym=EVO&tsyms=EUR",
             }
         }
     }
@@ -104,7 +115,6 @@ ApplicationWindow {
     property var current_address
     property var current_address_label: "Primary"
     property int current_subaddress_table_index: 0
-    property int current_subaddress_account_table_index: 0
 
     function altKeyReleased() { ctrlPressed = false; }
 
@@ -194,8 +204,20 @@ ApplicationWindow {
         leftPanel.selectItem(page);
     }
 
+    function openWallet(prevState) {
+        passwordDialog.onAcceptedCallback = function() {
+            walletPassword = passwordDialog.password;
+            initialize();
+        }
+        passwordDialog.onRejectedCallback = function() {
+            if (prevState) {
+                appWindow.viewState = prevState;
+            }
+        };
+        passwordDialog.open(usefulName(walletPath()));
+    }
+
     function initialize() {
-        appWindow.viewState = "normal";
         console.log("initializing..")
 
         // Use stored log level
@@ -231,30 +253,18 @@ ApplicationWindow {
         simpleModeConnectionTimer.running = true;
 
         // wallet already opened with wizard, we just need to initialize it
-        if (typeof wizard.m_wallet !== 'undefined') {
-            console.log("using wizard wallet")
-            //Set restoreHeight
-            if(persistentSettings.restore_height > 0){
-                // We store restore height in own variable for performance reasons.
-                restoreHeight = persistentSettings.restore_height
-            }
+        var wallet_path = walletPath();
+        if(isIOS)
+            wallet_path = moneroAccountsDir + wallet_path;
+        // console.log("opening wallet at: ", wallet_path, "with password: ", appWindow.walletPassword);
+        console.log("opening wallet at: ", wallet_path, ", network type: ", persistentSettings.nettype == NetworkType.MAINNET ? "mainnet" : persistentSettings.nettype == NetworkType.TESTNET ? "testnet" : "stagenet");
 
-            connectWallet(wizard.m_wallet)
-
-            isNewWallet = true
-            // We don't need the wizard wallet any more - delete to avoid conflict with daemon adress change
-            delete wizard.m_wallet
-        }  else {
-            var wallet_path = walletPath();
-            if(isIOS)
-                wallet_path = moneroAccountsDir + wallet_path;
-            // console.log("opening wallet at: ", wallet_path, "with password: ", appWindow.walletPassword);
-            console.log("opening wallet at: ", wallet_path, ", network type: ", persistentSettings.nettype == NetworkType.MAINNET ? "mainnet" : persistentSettings.nettype == NetworkType.TESTNET ? "testnet" : "stagenet");
-
-            this.onWalletOpening();
-            walletManager.openWalletAsync(wallet_path, walletPassword,
-                                              persistentSettings.nettype, persistentSettings.kdfRounds);
-        }
+        this.onWalletOpening();
+        walletManager.openWalletAsync(
+            wallet_path,
+            walletPassword,
+            persistentSettings.nettype,
+            persistentSettings.kdfRounds);
 
         // Hide titlebar based on persistentSettings.customDecorations
         titleBar.visible = persistentSettings.customDecorations;
@@ -318,7 +328,7 @@ ApplicationWindow {
 
         if(!wallet || wallet === undefined || wallet.path === undefined){
             informationPopup.title  = qsTr("Error") + translationManager.emptyString;
-            informationPopup.text = qsTr("Couldn't open wallet: ") + 'please restart App.';
+            informationPopup.text = qsTr("Couldn't open wallet: ") + 'please restart GUI.';
             informationPopup.icon = StandardIcon.Critical
             informationPopup.open()
             informationPopup.onCloseCallback = function() {
@@ -394,6 +404,13 @@ ApplicationWindow {
         return path.replace(/.*[\/\\]/, '').replace(/\.keys$/, '')
     }
 
+    function getUnlockedBalance() {
+        if(!currentWallet){
+            return 0
+        }
+        return currentWallet.unlockedBalance()
+    }
+
     function updateBalance() {
         if (!currentWallet)
             return;
@@ -401,8 +418,8 @@ ApplicationWindow {
         var balance = "?.??";
         var balanceU = "?.??";
         if(!hideBalanceForced && !persistentSettings.hideBalance){
-            balance = walletManager.displayAmount(currentWallet.balance(currentWallet.currentSubaddressAccount));
-            balanceU = walletManager.displayAmount(currentWallet.unlockedBalance(currentWallet.currentSubaddressAccount));
+            balance = walletManager.displayAmount(currentWallet.balance());
+            balanceU = walletManager.displayAmount(currentWallet.unlockedBalance());
         }
 
         if (persistentSettings.fiatPriceEnabled) {
@@ -410,8 +427,6 @@ ApplicationWindow {
         }
 
         leftPanel.minutesToUnlock = (balance !== balanceU) ? currentWallet.history.minutesToUnlock : "";
-        leftPanel.currentAccountIndex = currentWallet.currentSubaddressAccount;
-        leftPanel.currentAccountLabel = currentWallet.getSubaddressLabel(currentWallet.currentSubaddressAccount, 0);
         leftPanel.balanceString = balance
         leftPanel.balanceUnlockedString = balanceU
     }
@@ -460,15 +475,11 @@ ApplicationWindow {
         middlePanel.updateStatus();
         leftPanel.networkStatus.connected = status
 
-        // update local daemon status.
-        if(walletManager.isDaemonLocal(currentDaemonAddress))
-            daemonRunning = status;
-
         // Update fee multiplier dropdown on transfer page
         middlePanel.transferView.updatePriorityDropdown();
 
         // If wallet isnt connected, advanced wallet mode and no daemon is running - Ask
-        if (appWindow.walletMode >= 2 && walletManager.isDaemonLocal(currentDaemonAddress) && !walletInitialized && status === Wallet.ConnectionStatus_Disconnected) {
+        if (appWindow.walletMode >= 2 && !persistentSettings.useRemoteNode && !walletInitialized && disconnected) {
             daemonManager.runningAsync(persistentSettings.nettype, function(running) {
                 if (!running) {
                     daemonManagerDialog.open();
@@ -508,16 +519,6 @@ ApplicationWindow {
         walletName = usefulName(wallet.path)
         console.log(">>> wallet opened: " + wallet)
         if (wallet.status !== Wallet.Status_Ok) {
-            passwordDialog.onAcceptedCallback = function() {
-                walletPassword = passwordDialog.password;
-                appWindow.initialize();
-            }
-            passwordDialog.onRejectedCallback = function() {
-                walletPassword = "";
-                //appWindow.enableUI(false)
-                wizard.wizardState = "wizardHome";
-                rootItem.state = "wizard";
-            }
             // try to resolve common wallet cache errors automatically
             switch (wallet.errorString) {
                 case "basic_string::_M_replace_aux":
@@ -558,18 +559,16 @@ ApplicationWindow {
     }
 
     function onWalletPassphraseNeeded(){
-        if(rootItem.state !== "normal") return;
-
         hideProcessingSplash();
 
         console.log(">>> wallet passphrase needed: ")
         passwordDialog.onAcceptedPassphraseCallback = function() {
             walletManager.onPassphraseEntered(passwordDialog.password);
-            this.onWalletOpening();
+            appWindow.onWalletOpening();
         }
         passwordDialog.onRejectedPassphraseCallback = function() {
             walletManager.onPassphraseEntered("", true);
-            this.onWalletOpening();
+            appWindow.onWalletOpening();
         }
         passwordDialog.openPassphraseDialog()
     }
@@ -590,10 +589,19 @@ ApplicationWindow {
 
     function connectRemoteNode() {
         console.log("connecting remote node");
-        persistentSettings.useRemoteNode = true;
-        currentDaemonAddress = persistentSettings.remoteNodeAddress;
-        currentWallet.initAsync(currentDaemonAddress, isTrustedDaemon());
-        walletManager.setDaemonAddressAsync(currentDaemonAddress);
+
+        const callback = function() {
+            persistentSettings.useRemoteNode = true;
+            currentDaemonAddress = persistentSettings.remoteNodeAddress;
+            currentWallet.initAsync(currentDaemonAddress, isTrustedDaemon());
+            walletManager.setDaemonAddressAsync(currentDaemonAddress);
+        };
+
+        if (typeof daemonManager != "undefined" && daemonRunning) {
+            showDaemonIsRunningDialog(callback);
+        } else {
+            callback();
+        }
     }
 
     function disconnectRemoteNode() {
@@ -625,23 +633,12 @@ ApplicationWindow {
         }
 
         // Update wallet sync progress
-        leftPanel.isSyncing = (currentWallet.connected() !== Wallet.ConnectionStatus_Disconnected) && !daemonSynced
+        leftPanel.isSyncing = !disconnected && !daemonSynced;
         // Update transfer page status
         middlePanel.updateStatus();
 
         // Refresh is succesfull if blockchain height > 1
         if (bcHeight > 1){
-            // Save new wallet after first refresh
-            // Wallet is nomrmally saved to disk on app exit. This prevents rescan from block 0 after app crash
-            if(isNewWallet){
-                console.log("Saving wallet after first refresh");
-                currentWallet.store()
-                isNewWallet = false
-
-                // Update History
-                currentWallet.history.refresh(currentWallet.currentSubaddressAccount);
-            }
-
             // recovering from seed is finished after first refresh
             if(persistentSettings.is_recovering) {
                 persistentSettings.is_recovering = false
@@ -662,7 +659,7 @@ ApplicationWindow {
         console.log(">>> wallet refreshed")
 
         // Daemon connected
-        leftPanel.networkStatus.connected = currentWallet.connected()
+        leftPanel.networkStatus.connected = currentWallet ? currentWallet.connected() : Wallet.ConnectionStatus_Disconnected
 
         currentWallet.refreshHeightAsync();
     }
@@ -676,17 +673,20 @@ ApplicationWindow {
 
         appWindow.showProcessingSplash(qsTr("Waiting for daemon to start..."))
         const noSync = appWindow.walletMode === 0;
-        daemonManager.start(flags, persistentSettings.nettype, persistentSettings.blockchainDataDir, persistentSettings.bootstrapNodeAddress, noSync);
+        const bootstrapNodeAddress = persistentSettings.walletMode < 2 ? "auto" : persistentSettings.bootstrapNodeAddress
+        daemonManager.start(flags, persistentSettings.nettype, persistentSettings.blockchainDataDir, bootstrapNodeAddress, noSync);
     }
 
-    function stopDaemon(){
+    function stopDaemon(callback){
         appWindow.showProcessingSplash(qsTr("Waiting for daemon to stop..."))
-        daemonManager.stop(persistentSettings.nettype);
+        daemonManager.stopAsync(persistentSettings.nettype, function(result) {
+            hideProcessingSplash();
+            callback(result);
+        });
     }
 
     function onDaemonStarted(){
         console.log("daemon started");
-        daemonRunning = true;
         hideProcessingSplash();
         currentWallet.connected(true);
         // resume refresh
@@ -696,20 +696,16 @@ ApplicationWindow {
         simpleModeConnectionTimer.start();
     }
     function onDaemonStopped(){
-        console.log("daemon stopped");
-        hideProcessingSplash();
-        daemonRunning = false;
         currentWallet.connected(true);
     }
 
-    function onDaemonStartFailure(){
+    function onDaemonStartFailure(error) {
         console.log("daemon start failed");
         hideProcessingSplash();
         // resume refresh
         currentWallet.startRefresh();
-        daemonRunning = false;
         informationPopup.title = qsTr("Daemon failed to start") + translationManager.emptyString;
-        informationPopup.text  = qsTr("Please check your wallet and daemon log for errors. You can also try to start %1 manually.").arg((isWindows)? "coinevod.exe" : "coinevod")
+        informationPopup.text  = error + ".\n\n" + qsTr("Please check your wallet and daemon log for errors. You can also try to start %1 manually.").arg((isWindows)? "coinevod.exe" : "coinevod")
         informationPopup.icon  = StandardIcon.Critical
         informationPopup.onCloseCallback = null
         informationPopup.open();
@@ -752,7 +748,7 @@ ApplicationWindow {
 
     function onWalletMoneySent(txId, amount) {
         // refresh transaction history here
-        console.log("monero sent found")
+        console.log("coinevo sent found")
         currentWallet.history.refresh(currentWallet.currentSubaddressAccount); // this will refresh model
 
         if(middlePanel.state == "History")
@@ -840,24 +836,24 @@ ApplicationWindow {
         if (amount !== "(all)") {
             var amountxmr = walletManager.amountFromString(amount);
             console.log("integer amount: ", amountxmr);
-            console.log("integer unlocked",currentWallet.unlockedBalance)
+            console.log("integer unlocked", currentWallet.unlockedBalance())
             if (amountxmr <= 0) {
                 hideProcessingSplash()
                 informationPopup.title = qsTr("Error") + translationManager.emptyString;
                 informationPopup.text  = qsTr("Amount is wrong: expected number from %1 to %2")
                         .arg(walletManager.displayAmount(0))
-                        .arg(walletManager.maximumAllowedAmountAsSting())
+                        .arg(walletManager.displayAmount(currentWallet.unlockedBalance()))
                         + translationManager.emptyString
 
                 informationPopup.icon  = StandardIcon.Critical
                 informationPopup.onCloseCallback = null
                 informationPopup.open()
                 return;
-            } else if (amountxmr > currentWallet.unlockedBalance) {
+            } else if (amountxmr > currentWallet.unlockedBalance()) {
                 hideProcessingSplash()
                 informationPopup.title = qsTr("Error") + translationManager.emptyString;
                 informationPopup.text  = qsTr("Insufficient funds. Unlocked balance: %1")
-                        .arg(walletManager.displayAmount(currentWallet.unlockedBalance))
+                        .arg(walletManager.displayAmount(currentWallet.unlockedBalance()))
                         + translationManager.emptyString
 
                 informationPopup.icon  = StandardIcon.Critical
@@ -965,7 +961,7 @@ ApplicationWindow {
                     txid_text += ", "
                 txid_text += txid[i]
             }
-            informationPopup.text  = (viewOnly)? qsTr("Transaction saved to file: %1").arg(path) : qsTr("Monero sent successfully: %1 transaction(s) ").arg(txid.length) + txid_text + translationManager.emptyString
+            informationPopup.text  = (viewOnly)? qsTr("Transaction saved to file: %1").arg(path) : qsTr("coinevo sent successfully: %1 transaction(s) ").arg(txid.length) + txid_text + translationManager.emptyString
             informationPopup.icon  = StandardIcon.Information
             if (transactionDescription.length > 0) {
                 for (var i = 0; i < txid.length; ++i)
@@ -1045,10 +1041,10 @@ ApplicationWindow {
                 informationPopup.icon = StandardIcon.Critical;
             } else if (received > 0) {
                 if (in_pool) {
-                    informationPopup.text = qsTr("This address received %1 monero, but the transaction is not yet mined").arg(walletManager.displayAmount(received));
+                    informationPopup.text = qsTr("This address received %1 coinevo, but the transaction is not yet mined").arg(walletManager.displayAmount(received));
                 }
                 else {
-                    informationPopup.text = qsTr("This address received %1 monero, with %2 confirmation(s).").arg(walletManager.displayAmount(received)).arg(confirmations);
+                    informationPopup.text = qsTr("This address received %1 coinevo, with %2 confirmation(s).").arg(walletManager.displayAmount(received)).arg(confirmations);
                 }
             }
             else {
@@ -1086,7 +1082,6 @@ ApplicationWindow {
         leftPanel.enabled = false;
         middlePanel.enabled = false;
         titleBar.enabled = false;
-        inactiveOverlay.visible = true;
         splash.show();
     }
 
@@ -1098,7 +1093,6 @@ ApplicationWindow {
             leftPanel.enabled = true
             middlePanel.enabled = true
             titleBar.enabled = true
-            inactiveOverlay.visible = false;
         }
     }
 
@@ -1111,6 +1105,9 @@ ApplicationWindow {
             rootItem.state = "wizard"
             // reset balance
             clearMoneroCardLabelText();
+            middlePanel.addressBookView.clearFields();
+            middlePanel.transferView.clearFields();
+            middlePanel.receiveView.clearFields();
             // disable timers
             userInActivityTimer.running = false;
             simpleModeConnectionTimer.running = false;
@@ -1146,7 +1143,7 @@ ApplicationWindow {
                 return;
             }
 
-            var key = currency === "evoeur" ? "XXMRZEUR" : "XXMRZUSD";
+            var key = currency === "evoeur" ? "EEVOZEUR" : "EEVOZUSD";
             var ticker = resp.result[key]["o"];
             return ticker;
         } else if(resp._url.startsWith("https://api.coingecko.com/api/v3/")){
@@ -1204,9 +1201,9 @@ ApplicationWindow {
             return;
         }
 
-        if(persistentSettings.fiatPriceCurrency === "xmrusd")
+        if(persistentSettings.fiatPriceCurrency === "evousd")
             appWindow.fiatPriceXMRUSD = ticker;
-        else if(persistentSettings.fiatPriceCurrency === "xmreur")
+        else if(persistentSettings.fiatPriceCurrency === "evoeur")
             appWindow.fiatPriceXMREUR = ticker;
 
         appWindow.updateBalance();
@@ -1233,17 +1230,32 @@ ApplicationWindow {
         Prices.getJSON(url);
     }
 
+    function fiatApiCurrencySymbol() {
+        switch (persistentSettings.fiatPriceCurrency) {
+            case "evousd":
+                return "USD";
+            case "evoeur":
+                return "EUR";
+            default:
+                console.error("unsupported currency", persistentSettings.fiatPriceCurrency);
+                return "UNSUPPORTED";
+        }
+    }
+
+    function fiatApiConvertToFiat(amount) {
+        var ticker = persistentSettings.fiatPriceCurrency === "evousd" ? appWindow.fiatPriceXMRUSD : appWindow.fiatPriceXMREUR;
+        if(ticker <= 0){
+            console.log(fiatApiError("Invalid ticker value: " + ticker));
+            return "?.??";
+        }
+        return (amount * ticker).toFixed(2);
+    }
+
     function fiatApiUpdateBalance(balance){
         // update balance card
-        var ticker = persistentSettings.fiatPriceCurrency === "xmrusd" ? appWindow.fiatPriceXMRUSD : appWindow.fiatPriceXMREUR;
-        if(ticker <= 0){
-            console.log(fiatApiError("Could not update balance card; invalid ticker value"));
-            leftPanel.balanceFiatString = "?.??";
-            return;
-        }
         var bFiat = "?.??"
         if (!hideBalanceForced && !persistentSettings.hideBalance) {
-            bFiat = (balance * ticker).toFixed(2);
+            bFiat = fiatApiConvertToFiat(balance);
         }
         leftPanel.balanceFiatString = bFiat;
     }
@@ -1297,18 +1309,12 @@ ApplicationWindow {
         } else console.log("qrScannerEnabled disabled");
 
         if(!walletsFound()) {
+            wizard.wizardState = "wizardLanguage";
             rootItem.state = "wizard"
         } else {
+            wizard.wizardState = "wizardHome";
             rootItem.state = "normal"
-            passwordDialog.onAcceptedCallback = function() {
-                walletPassword = passwordDialog.password;
-                initialize(persistentSettings);
-            }
-            passwordDialog.onRejectedCallback = function() {
-                wizard.wizardState = "wizardHome";
-                rootItem.state = "wizard"
-            }
-            passwordDialog.open(usefulName(walletPath()))
+            openWallet("wizard");
         }
 
         checkUpdates();
@@ -1323,7 +1329,7 @@ ApplicationWindow {
         id: persistentSettings
         fileName: {
             if(isTails && tailsUsePersistence)
-                return homePath + "/Persistent/Coinevo/coinevo-app.conf";
+                return homePath + "/Persistent/Coinevo/coinevo-core.conf";
             return "";
         }
 
@@ -1331,12 +1337,9 @@ ApplicationWindow {
         property string locale
         property string account_name
         property string wallet_path
-        property bool   auto_donations_enabled : false
-        property int    auto_donations_amount : 50
         property bool   allow_background_mining : false
         property bool   miningIgnoreBattery : true
         property var    nettype: NetworkType.MAINNET
-        property string payment_id
         property int    restore_height : 0
         property bool   is_trusted_daemon : false
         property bool   is_recovering : false
@@ -1354,16 +1357,16 @@ ApplicationWindow {
         property string blockchainDataDir: ""
         property bool useRemoteNode: false
         property string remoteNodeAddress: ""
-        property string bootstrapNodeAddress: "mobile3.coinevo.tech"
-        property bool segregatePreForkOutputs: false
-        property bool keyReuseMitigation2: false
+        property string bootstrapNodeAddress: ""
+        property bool segregatePreForkOutputs: true
+        property bool keyReuseMitigation2: true
         property int segregationHeight: 0
         property int kdfRounds: 1
         property bool hideBalance: false
         property bool lockOnUserInActivity: true
         property int walletMode: 2
         property int lockOnUserInActivityInterval: 10  // minutes
-        property bool blackTheme: false
+        property bool blackTheme: true
 
         property bool fiatPriceEnabled: false
         property bool fiatPriceToggle: false
@@ -1574,98 +1577,119 @@ ApplicationWindow {
             }
         ]
 
-        LeftPanel {
-            id: leftPanel
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            visible: rootItem.state == "normal" && middlePanel.state != "Merchant"
-
-            onTransferClicked: {
-                middlePanel.state = "Transfer";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-
-            onReceiveClicked: {
-                middlePanel.state = "Receive";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-
-            onMerchantClicked: {
-                middlePanel.state = "Merchant";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-
-            onTxkeyClicked: {
-                middlePanel.state = "TxKey";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-
-            onSharedringdbClicked: {
-                middlePanel.state = "SharedRingDB";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-
-            onHistoryClicked: {
-                middlePanel.state = "History";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-
-            onAddressBookClicked: {
-                middlePanel.state = "AddressBook";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-
-            onMiningClicked: {
-                middlePanel.state = "Mining";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-
-            onSignClicked: {
-                middlePanel.state = "Sign";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-
-            onSettingsClicked: {
-                middlePanel.state = "Settings";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-            
-            onAccountClicked: {
-                middlePanel.state = "Account";
-                middlePanel.flickable.contentY = 0;
-                updateBalance();
-            }
-        }
-
-
-        MiddlePanel {
-            id: middlePanel
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            anchors.left: leftPanel.visible ?  leftPanel.right : parent.left
-            anchors.right: parent.right
-            state: "Transfer"
-        }
-
-        WizardController {
-            id: wizard
+        Item {
+            id: blurredArea
             anchors.fill: parent
-            onUseMoneroClicked: {
-                rootItem.state = "normal";
-                appWindow.initialize();
+
+            LeftPanel {
+                id: leftPanel
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                visible: rootItem.state == "normal" && middlePanel.state != "Merchant"
+                currentAccountIndex: currentWallet ? currentWallet.currentSubaddressAccount : 0
+                currentAccountLabel: {
+                    if (currentWallet) {
+                        return currentWallet.getSubaddressLabel(currentWallet.currentSubaddressAccount, 0);
+                    }
+                    return qsTr("Primary account") + translationManager.emptyString;
+                }
+
+                onTransferClicked: {
+                    middlePanel.state = "Transfer";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onReceiveClicked: {
+                    middlePanel.state = "Receive";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onMerchantClicked: {
+                    middlePanel.state = "Merchant";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onTxkeyClicked: {
+                    middlePanel.state = "TxKey";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onSharedringdbClicked: {
+                    middlePanel.state = "SharedRingDB";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onHistoryClicked: {
+                    middlePanel.state = "History";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onAddressBookClicked: {
+                    middlePanel.state = "AddressBook";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onMiningClicked: {
+                    middlePanel.state = "Mining";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onSignClicked: {
+                    middlePanel.state = "Sign";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onSettingsClicked: {
+                    middlePanel.state = "Settings";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+
+                onAccountClicked: {
+                    middlePanel.state = "Account";
+                    middlePanel.flickable.contentY = 0;
+                    updateBalance();
+                }
+            }
+
+            MiddlePanel {
+                id: middlePanel
+                accountView.currentAccountIndex: currentWallet ? currentWallet.currentSubaddressAccount : 0
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.left: leftPanel.visible ? leftPanel.right : parent.left
+                anchors.right: parent.right
+                state: "Transfer"
+            }
+
+            WizardController {
+                id: wizard
+                anchors.fill: parent
+                onUseMoneroClicked: {
+                    rootItem.state = "normal";
+                    appWindow.openWallet("wizard");
+                }
             }
         }
+
+        FastBlur {
+            id: blur
+            anchors.fill: blurredArea
+            source: blurredArea
+            radius: 64
+            visible: passwordDialog.visible || inputDialog.visible || splash.visible
+        }
+
 
         WizardLang {
             id: languageView
@@ -1833,11 +1857,10 @@ ApplicationWindow {
         const disconnectedTimeoutSec = 30;
         const firstCheckDelaySec = 2;
 
-        const connected = leftPanel.networkStatus.connected !== Wallet.ConnectionStatus_Disconnected;
         const firstRun = appWindow.disconnectedEpoch == 0;
         if (firstRun) {
             appWindow.disconnectedEpoch = Utils.epoch() + firstCheckDelaySec - disconnectedTimeoutSec;
-        } else if (connected) {
+        } else if (!disconnected) {
             appWindow.disconnectedEpoch = Utils.epoch();
         }
 
@@ -1893,6 +1916,22 @@ ApplicationWindow {
         statusMessage.visible = true
     }
 
+    function showDaemonIsRunningDialog(onClose) {
+        // Show confirmation dialog
+        confirmationDialog.title = qsTr("Local node is running") + translationManager.emptyString;
+        confirmationDialog.text  = qsTr("Do you want to stop local node or keep it running in the background?") + translationManager.emptyString;
+        confirmationDialog.icon = StandardIcon.Question;
+        confirmationDialog.cancelText = qsTr("Force stop") + translationManager.emptyString;
+        confirmationDialog.okText = qsTr("Keep it running") + translationManager.emptyString;
+        confirmationDialog.onAcceptedCallback = function() {
+            onClose();
+        }
+        confirmationDialog.onRejectedCallback = function() {
+            stopDaemon(onClose);
+        };
+        confirmationDialog.open();
+    }
+
     onClosing: {
         close.accepted = false;
         console.log("blocking close event");
@@ -1914,27 +1953,11 @@ ApplicationWindow {
 
         // If daemon is running - prompt user before exiting
         if(typeof daemonManager != "undefined" && daemonRunning) {
-            // Show confirmation dialog
-            confirmationDialog.title = qsTr("Daemon is running") + translationManager.emptyString;
-            confirmationDialog.text  = qsTr("Daemon will still be running in background when App is closed.");
-            confirmationDialog.icon = StandardIcon.Question
-            confirmationDialog.cancelText = qsTr("Stop daemon")
-            confirmationDialog.onAcceptedCallback = function() {
-                closeAccepted();
-            }
-
-            confirmationDialog.onRejectedCallback = function() {
-                daemonManager.stop(persistentSettings.nettype);
-                closeAccepted();
-            };
-
             if (appWindow.walletMode == 0) {
-                stopDaemon();
-                closeAccepted();
+                stopDaemon(closeAccepted);
             } else {
-                confirmationDialog.open();
+                showDaemonIsRunningDialog(closeAccepted);
             }
-
         } else {
             closeAccepted();
         }
@@ -1956,17 +1979,12 @@ ApplicationWindow {
         if (parts.length == 4) {
             var version = parts[0]
             var hash = parts[1]
-            //var user_url = parts[2]
-            //var auto_url = parts[3]
-            var osBuildTag = isMac ? "mac-x64" : isWindows ? "win-x64" : isLinux ? "linux-x64" : "unknownBuildTag"
-            var extension = isMac || isLinux ? ".tar.bz2" : isWindows ? ".zip" : ".unknownExtension"
-            var base_url = "https://downloads.coinevo.tech/gui/coinevo-gui"
-            var download_url = base_url + osBuildTag + "-v" + version + extension
-            var msg = ""
-            if (osBuildTag !== "unknownBuildTag") {
-                msg = qsTr("New version of Coinevo v.%1 is available.<br><br>Download:<br>%2<br><br>SHA256 Hash:<br>%3").arg(version).arg(download_url).arg(hash) + translationManager.emptyString
+            var user_url = parts[2]
+            var msg = qsTr("New version of coinevo v%1 is available.").arg(version)
+            if (isMac || isWindows || isLinux) {
+                msg += "<br><br>%1:<br>%2<br><br>%3:<br>%4".arg(qsTr("Download")).arg(user_url).arg(qsTr("SHA256 Hash")).arg(hash) + translationManager.emptyString
             } else {
-                msg = qsTr("New version of Coinevo is available. Check out coinevo.tech") + translationManager.emptyString
+                msg += " " + qsTr("Check out coinevo.tech") + translationManager.emptyString
             }
             notifier.show(msg)
         } else {
@@ -1975,7 +1993,7 @@ ApplicationWindow {
     }
 
     function checkUpdates() {
-        walletManager.checkUpdatesAsync("coinevo-app", "app")
+        walletManager.checkUpdatesAsync("coinevo-gui", "gui")
     }
 
     Timer {
@@ -2002,7 +2020,9 @@ ApplicationWindow {
     // some fields need an extra nudge when changing languages
     function resetLanguageFields(){
         clearMoneroCardLabelText()
-        onWalletRefresh()
+        if (currentWallet) {
+            onWalletRefresh();
+        }
     }
 
     function userActivity() {
@@ -2015,6 +2035,7 @@ ApplicationWindow {
         if(rootItem.state !== "normal") return;
         if(!persistentSettings.lockOnUserInActivity) return;
         if(passwordDialog.visible) return;
+        var inputDialogVisible = inputDialog && inputDialog.visible
 
         // prompt password after X seconds of inactivity
         var epoch = Math.floor((new Date).getTime() / 1000);
@@ -2027,18 +2048,20 @@ ApplicationWindow {
             } else {
                 passwordDialog.showError(qsTr("Wrong password"));
             }
+            if (inputDialogVisible) inputDialog.open(inputDialog.inputText)
         }
 
         passwordDialog.onRejectedCallback = function() { appWindow.showWizard(); }
+        if (inputDialogVisible) inputDialog.close()
         passwordDialog.open();
     }
 
     function getDefaultDaemonRpcPort(networkType) {
         switch (networkType) {
             case NetworkType.STAGENET:
-                return 55551;
+                return 38081;
             case NetworkType.TESTNET:
-                return 44441;
+                return 28081;
             default:
                 return 33331;
         }
@@ -2054,7 +2077,6 @@ ApplicationWindow {
     function applyWalletMode(mode){
         if (mode < 2) {
             persistentSettings.useRemoteNode = false;
-            persistentSettings.bootstrapNodeAddress = "auto";
 
             if (middlePanel.settingsView.settingsStateViewState === "Node" || middlePanel.settingsView.settingsStateViewState === "Log") {
                 middlePanel.settingsView.settingsStateViewState = "Wallet"
@@ -2063,24 +2085,13 @@ ApplicationWindow {
         console.log("walletMode: " + (mode === 0 ? "simple": mode === 1 ? "simple (bootstrap)" : "Advanced"));
     }
 
-    // Daemon console
-    DaemonConsole {
-        id: daemonConsolePopup
-        height:500
-        width:800
-        title: qsTr("Daemon log") + translationManager.emptyString
-        onAccepted: {
-            close();
-        }
-    }
-
     Rectangle {
         id: inactiveOverlay
-        visible: false
+        visible: blur.visible
         anchors.fill: parent
         anchors.topMargin: titleBar.height
         color: MoneroComponents.Style.blackTheme ? "black" : "white"
-        opacity: MoneroComponents.Style.blackTheme ? 0.8 : 0.9
+        opacity: isOpenGL ? 0.3 : inputDialog.visible || splash.visible ? 0.7 : 1.0
 
         MoneroEffects.ColorTransition {
             targetObj: parent

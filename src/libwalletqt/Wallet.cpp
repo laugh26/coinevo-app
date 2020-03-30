@@ -55,6 +55,8 @@ namespace {
     static const int DAEMON_BLOCKCHAIN_HEIGHT_CACHE_TTL_SECONDS = 5;
     static const int DAEMON_BLOCKCHAIN_TARGET_HEIGHT_CACHE_TTL_SECONDS = 30;
     static const int WALLET_CONNECTION_STATUS_CACHE_TTL_SECONDS = 5;
+
+    static constexpr char ATTRIBUTE_SUBADDRESS_ACCOUNT[] ="gui.subaddress_account";
 }
 
 class WalletListenerImpl : public  Monero::WalletListener
@@ -66,38 +68,38 @@ public:
 
     }
 
-    virtual void moneySpent(const std::string &txId, uint64_t amount)
+    virtual void moneySpent(const std::string &txId, uint64_t amount) override
     {
         qDebug() << __FUNCTION__;
         emit m_wallet->moneySpent(QString::fromStdString(txId), amount);
     }
 
 
-    virtual void moneyReceived(const std::string &txId, uint64_t amount)
+    virtual void moneyReceived(const std::string &txId, uint64_t amount) override
     {
         qDebug() << __FUNCTION__;
         emit m_wallet->moneyReceived(QString::fromStdString(txId), amount);
     }
 
-    virtual void unconfirmedMoneyReceived(const std::string &txId, uint64_t amount)
+    virtual void unconfirmedMoneyReceived(const std::string &txId, uint64_t amount) override
     {
         qDebug() << __FUNCTION__;
         emit m_wallet->unconfirmedMoneyReceived(QString::fromStdString(txId), amount);
     }
 
-    virtual void newBlock(uint64_t height)
+    virtual void newBlock(uint64_t height) override
     {
         // qDebug() << __FUNCTION__;
         emit m_wallet->newBlock(height, m_wallet->daemonBlockChainTargetHeight());
     }
 
-    virtual void updated()
+    virtual void updated() override
     {
         emit m_wallet->updated();
     }
 
     // called when wallet refreshed by background thread or explicitly
-    virtual void refreshed()
+    virtual void refreshed() override
     {
         qDebug() << __FUNCTION__;
         emit m_wallet->refreshed();
@@ -151,12 +153,14 @@ NetworkType::Type Wallet::nettype() const
 void Wallet::updateConnectionStatusAsync()
 {
     m_scheduler.run([this] {
+        if (m_connectionStatus == Wallet::ConnectionStatus_Disconnected)
+        {
+            setConnectionStatus(ConnectionStatus_Connecting);
+        }
         ConnectionStatus newStatus = static_cast<ConnectionStatus>(m_walletImpl->connected());
         if (newStatus != m_connectionStatus || !m_initialized) {
             m_initialized = true;
-            m_connectionStatus = newStatus;
-            qDebug() << "NEW STATUS " << newStatus;
-            emit connectionStatusChanged(newStatus);
+            setConnectionStatus(newStatus);
         }
         // Release lock
         m_connectionStatusRunning = false;
@@ -174,6 +178,31 @@ Wallet::ConnectionStatus Wallet::connected(bool forceCheck)
     }
 
     return m_connectionStatus;
+}
+
+bool Wallet::disconnected() const
+{
+    return m_disconnected;
+}
+
+void Wallet::setConnectionStatus(ConnectionStatus value)
+{
+    if (m_connectionStatus == value)
+    {
+        return;
+    }
+
+    m_connectionStatus = value;
+    emit connectionStatusChanged(m_connectionStatus);
+
+    bool disconnected = m_connectionStatus == Wallet::ConnectionStatus_Connecting ||
+        m_connectionStatus == Wallet::ConnectionStatus_Disconnected;
+
+    if (m_disconnected != disconnected)
+    {
+        m_disconnected = disconnected;
+        emit disconnectedChanged();
+    }
 }
 
 bool Wallet::synchronized() const
@@ -235,13 +264,7 @@ void Wallet::setDaemonLogin(const QString &daemonUsername, const QString &daemon
 void Wallet::initAsync(const QString &daemonAddress, bool trustedDaemon, quint64 upperTransactionLimit, bool isRecovering, bool isRecoveringFromDevice, quint64 restoreHeight)
 {
     qDebug() << "initAsync: " + daemonAddress;
-    // Change status to disconnected if connected
-    if(m_connectionStatus != Wallet::ConnectionStatus_Disconnected) {
-        m_connectionStatus = Wallet::ConnectionStatus_Disconnected;
-        emit connectionStatusChanged(m_connectionStatus);
-    }
-
-    m_scheduler.run([this, daemonAddress, trustedDaemon, upperTransactionLimit, isRecovering, isRecoveringFromDevice, restoreHeight] {
+    const auto future = m_scheduler.run([this, daemonAddress, trustedDaemon, upperTransactionLimit, isRecovering, isRecoveringFromDevice, restoreHeight] {
         bool success = init(daemonAddress, trustedDaemon, upperTransactionLimit, isRecovering, isRecoveringFromDevice, restoreHeight);
         if (success)
         {
@@ -251,6 +274,10 @@ void Wallet::initAsync(const QString &daemonAddress, bool trustedDaemon, quint64
             m_walletImpl->startRefresh();
         }
     });
+    if (future.first)
+    {
+        setConnectionStatus(Wallet::ConnectionStatus_Connecting);
+    }
 }
 
 bool Wallet::isHwBacked() const
@@ -287,6 +314,11 @@ bool Wallet::viewOnly() const
     return m_walletImpl->watchOnly();
 }
 
+quint64 Wallet::balance() const
+{
+    return balance(m_currentSubaddressAccount);
+}
+
 quint64 Wallet::balance(quint32 accountIndex) const
 {
     return m_walletImpl->balance(accountIndex);
@@ -295,6 +327,11 @@ quint64 Wallet::balance(quint32 accountIndex) const
 quint64 Wallet::balanceAll() const
 {
     return m_walletImpl->balanceAll();
+}
+
+quint64 Wallet::unlockedBalance() const
+{
+    return unlockedBalance(m_currentSubaddressAccount);
 }
 
 quint64 Wallet::unlockedBalance(quint32 accountIndex) const
@@ -316,8 +353,13 @@ void Wallet::switchSubaddressAccount(quint32 accountIndex)
     if (accountIndex < numSubaddressAccounts())
     {
         m_currentSubaddressAccount = accountIndex;
+        if (!setCacheAttribute(ATTRIBUTE_SUBADDRESS_ACCOUNT, QString::number(m_currentSubaddressAccount)))
+        {
+            qWarning() << "failed to set " << ATTRIBUTE_SUBADDRESS_ACCOUNT << " cache attribute";
+        }
         m_subaddress->refresh(m_currentSubaddressAccount);
         m_history->refresh(m_currentSubaddressAccount);
+        emit currentSubaddressAccountChanged();
     }
 }
 void Wallet::addSubaddressAccount(const QString& label)
@@ -344,6 +386,7 @@ QString Wallet::getSubaddressLabel(quint32 accountIndex, quint32 addressIndex) c
 void Wallet::setSubaddressLabel(quint32 accountIndex, quint32 addressIndex, const QString &label)
 {
     m_walletImpl->setSubaddressLabel(accountIndex, addressIndex, label.toStdString());
+    emit currentSubaddressAccountChanged();
 }
 void Wallet::deviceShowAddressAsync(quint32 accountIndex, quint32 addressIndex, const QString &paymentId)
 {
@@ -431,7 +474,7 @@ bool Wallet::refresh()
     bool result = m_walletImpl->refresh();
     m_history->refresh(currentSubaddressAccount());
     m_subaddress->refresh(currentSubaddressAccount());
-    m_subaddressAccount->getAll(true);
+    m_subaddressAccount->getAll();
     if (result)
         emit updated();
     return result;
@@ -749,7 +792,7 @@ QString Wallet::signMessage(const QString &message, bool filename) const
         file.close();
         return "";
       }
-      std::string signature = m_walletImpl->signMessage(std::string((const char*)data, size));
+      std::string signature = m_walletImpl->signMessage(std::string(reinterpret_cast<const char*>(data), size));
       file.unmap(data);
       file.close();
       return QString::fromStdString(signature);
@@ -785,7 +828,7 @@ bool Wallet::verifySignedMessage(const QString &message, const QString &address,
         file.close();
         return false;
       }
-      bool ret = m_walletImpl->verifySignedMessage(std::string((const char*)data, size), address.toStdString(), signature.toStdString());
+      bool ret = m_walletImpl->verifySignedMessage(std::string(reinterpret_cast<const char*>(data), size), address.toStdString(), signature.toStdString());
       file.unmap(data);
       file.close();
       return ret;
@@ -967,7 +1010,9 @@ Wallet::Wallet(Monero::Wallet *w, QObject *parent)
     , m_daemonBlockChainHeightTtl(DAEMON_BLOCKCHAIN_HEIGHT_CACHE_TTL_SECONDS)
     , m_daemonBlockChainTargetHeight(0)
     , m_daemonBlockChainTargetHeightTtl(DAEMON_BLOCKCHAIN_TARGET_HEIGHT_CACHE_TTL_SECONDS)
+    , m_connectionStatus(Wallet::ConnectionStatus_Disconnected)
     , m_connectionStatusTtl(WALLET_CONNECTION_STATUS_CACHE_TTL_SECONDS)
+    , m_disconnected(true)
     , m_currentSubaddressAccount(0)
     , m_subaddress(nullptr)
     , m_subaddressModel(nullptr)
@@ -981,11 +1026,11 @@ Wallet::Wallet(Monero::Wallet *w, QObject *parent)
     m_subaddressAccount = new SubaddressAccount(m_walletImpl->subaddressAccount(), this);
     m_walletListener = new WalletListenerImpl(this);
     m_walletImpl->setListener(m_walletListener);
-    m_connectionStatus = Wallet::ConnectionStatus_Disconnected;
+    m_currentSubaddressAccount = getCacheAttribute(ATTRIBUTE_SUBADDRESS_ACCOUNT).toUInt();
     // start cache timers
-    m_connectionStatusTime.restart();
-    m_daemonBlockChainHeightTime.restart();
-    m_daemonBlockChainTargetHeightTime.restart();
+    m_connectionStatusTime.start();
+    m_daemonBlockChainHeightTime.start();
+    m_daemonBlockChainTargetHeightTime.start();
     m_initialized = false;
     m_connectionStatusRunning = false;
     m_daemonUsername = "";

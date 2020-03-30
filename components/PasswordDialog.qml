@@ -68,7 +68,6 @@ Item {
         passwordInput1.text = ""
         passwordInput2.text = ""
         passwordInput1.forceActiveFocus();
-        inactiveOverlay.visible = true // draw appwindow inactive
         root.walletName = walletName ? walletName : ""
         errorTextLabel.text = errorText ? errorText : "";
         leftPanel.enabled = false
@@ -106,7 +105,6 @@ Item {
     }
 
     function close() {
-        inactiveOverlay.visible = false
         leftPanel.enabled = true
         middlePanel.enabled = true
         wizard.enabled = true
@@ -125,7 +123,6 @@ Item {
     }
 
     ColumnLayout {
-        z: inactiveOverlay.z + 1
         id: mainLayout
         spacing: 10
         anchors { fill: parent; margins: 35 }
@@ -187,7 +184,7 @@ Item {
                 text: qsTr("CAPSLOCKS IS ON.") + translationManager.emptyString;
             }
 
-            TextField {
+            MoneroComponents.Input {
                 id: passwordInput1
                 Layout.topMargin: 6
                 Layout.fillWidth: true
@@ -203,6 +200,7 @@ Item {
                         return passwordInput2
                     }
                 }
+                implicitHeight: 50
                 bottomPadding: 10
                 leftPadding: 10
                 topPadding: 10
@@ -253,7 +251,11 @@ Item {
                 }
 
                 Keys.enabled: root.visible
+                Keys.onEnterPressed: Keys.onReturnPressed(event)
                 Keys.onReturnPressed: {
+                    if (!passwordDialogMode && passwordInput1.text !== passwordInput2.text) {
+                        return;
+                    }
                     root.close()
                     if (passwordDialogMode) {
                         root.accepted()
@@ -296,7 +298,7 @@ Item {
                 color: MoneroComponents.Style.defaultFontColor
             }
 
-            TextField {
+            MoneroComponents.Input {
                 id: passwordInput2
                 visible: !passwordDialogMode
                 Layout.topMargin: 6
@@ -307,6 +309,7 @@ Item {
                 font.pixelSize: 24
                 echoMode: TextInput.Password
                 KeyNavigation.tab: okButton
+                implicitHeight: 50
                 bottomPadding: 10
                 leftPadding: 10
                 topPadding: 10
@@ -350,6 +353,8 @@ Item {
                     }
                 }
 
+                Keys.enabled: root.visible
+                Keys.onEnterPressed: Keys.onReturnPressed(event)
                 Keys.onReturnPressed: {
                     if (passwordInput1.text === passwordInput2.text) {
                         root.close()

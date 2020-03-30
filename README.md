@@ -1,15 +1,15 @@
-# ~~Monero GUI~~ Coinevo App
+# Monero GUI
 
 Copyright (c) 2014-2019, The Monero Project
 
 ## Development resources
 
 - Web: [getmonero.org](https://getmonero.org)
-- Forum: [forum.getmonero.org](https://forum.getmonero.org)
 - Mail: [dev@getmonero.org](mailto:dev@getmonero.org)
 - Github: [https://github.com/monero-project/monero-gui](https://github.com/monero-project/monero-gui)
 - IRC: [#monero-dev on Freenode](irc://chat.freenode.net/#monero-dev)
 - Translation platform (Weblate): [translate.getmonero.org](https://translate.getmonero.org)
+- UI Design: [Monero-GUI on Figma](https://www.figma.com/file/DplJ2DDQfIKiuRvolHX2hN/Monero-GUI)
 
 ## Vulnerability response
 
@@ -58,8 +58,7 @@ See [LICENSE](LICENSE).
 
 ## Translations
 
-Do you speak a second language and would like to help translate the Monero GUI? Check out Pootle, our localization platform, at [translate.getmonero.org](https://translate.getmonero.org/projects/monero-gui/). Choose the language and suggest a translation for a string or review an existing one. The Localization Workgroup made [a guide with step-by-step instructions](https://github.com/monero-ecosystem/monero-translations/blob/master/pootle.md) for Pootle.
-&nbsp;
+Do you speak a second language and would like to help translate the Monero GUI? Check out Weblate, our localization platform, at [translate.getmonero.org](https://translate.getmonero.org/). Choose the language and suggest a translation for a string or review an existing one. The Localization Workgroup made [a guide with step-by-step instructions](https://github.com/monero-ecosystem/monero-translations/blob/master/weblate.md) for Weblate.
 
 If you need help/support or any info you can contact the localization workgroup on the IRC channel #monero-translations (relayed on matrix/riot and MatterMost) or by email at translate[at]getmonero[dot]org. For more info about the Localization workgroup: [github.com/monero-ecosystem/monero-translations](https://github.com/monero-ecosystem/monero-translations)
 
@@ -67,7 +66,7 @@ If you need help/support or any info you can contact the localization workgroup 
 
 Packages are available for
 
-* Arch Linux via AUR: [monero-wallet-qt](https://aur.archlinux.org/packages/monero-wallet-qt/)
+* Arch Linux: pacman -S monero-gui
 * Void Linux: xbps-install -S monero-core
 * GuixSD: guix package -i monero-core
 
@@ -85,7 +84,7 @@ Packaging for your favorite distribution would be a welcome contribution!
 
   - For Debian distributions (Debian, Ubuntu, Mint, Tails...)
 
-	`sudo apt install build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libzmq3-dev libsodium-dev libhidapi-dev libnorm-dev libusb-1.0-0-dev libpgm-dev`
+	`sudo apt install build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libzmq3-dev libsodium-dev libhidapi-dev libnorm-dev libusb-1.0-0-dev libpgm-dev libprotobuf-dev protobuf-compiler`
 
   - For Gentoo
 
@@ -93,7 +92,7 @@ Packaging for your favorite distribution would be a welcome contribution!
 
   - For Fedora
 
-	`sudo dnf install make automake cmake gcc-c++ boost-devel miniupnpc-devel graphviz doxygen unbound-devel libunwind-devel pkgconfig openssl-devel libcurl-devel hidapi-devel libusb-devel`
+	`sudo dnf install make automake cmake gcc-c++ boost-devel miniupnpc-devel graphviz doxygen unbound-devel libunwind-devel pkgconfig openssl-devel libcurl-devel hidapi-devel libusb-devel zeromq-devel`
 
 2. Install Qt:
 
@@ -145,25 +144,11 @@ The executable can be found in the build/release/bin folder.
 
 3. Install [monero](https://github.com/monero-project/monero) dependencies:
 
-  `brew install boost`
-
-  `brew install openssl` - to install openssl headers
-
-  `brew install pkgconfig`
-
-  `brew install cmake`
-
-  `brew install zeromq`
-
-  *Note*: If cmake can not find zmq.hpp file on OS X, installing `zmq.hpp` from https://github.com/zeromq/cppzmq to `/usr/local/include` should fix that error.
+  `brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf`
 
 4. Install Qt:
 
   `brew install qt5`  (or download QT 5.9.7+ from [qt.io](https://www.qt.io/download-open-source/))
-
-  If you have an older version of Qt installed via homebrew, you can force it to use 5.x like so:
-  
-  `brew link --force --overwrite qt5`
 
 5. Add the Qt bin directory to your path
 
@@ -183,19 +168,6 @@ The executable can be found in the build/release/bin folder.
   `./build.sh`
 
 The executable can be found in the `build/release/bin` folder.
-
-**Note:** Workaround for "ERROR: Xcode not set up properly"
-
-Edit `$HOME/Qt/5.9.7/clang_64/mkspecs/features/mac/default_pre.prf`
-
-replace
-`isEmpty($$list($$system("/usr/bin/xcrun -find xcrun 2>/dev/null")))`
-
-with
-`isEmpty($$list($$system("/usr/bin/xcrun -find xcodebuild 2>/dev/null")))`
-
-More info: http://stackoverflow.com/a/35098040/1683164
-
 
 ### On Windows:
 

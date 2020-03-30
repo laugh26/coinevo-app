@@ -82,7 +82,6 @@ Rectangle {
 
     property var m_wallet;
     property alias wizardState: wizardStateView.state
-    property alias wizardStatePrevious: wizardStateView.previousView
     property alias wizardStackView: stackView
     property int wizardSubViewWidth: 780
     property int wizardSubViewTopMargin: persistentSettings.customDecorations ? 90 : 32
@@ -115,8 +114,6 @@ Rectangle {
     // recovery made (restore wallet)
     property string walletRestoreMode: 'seed'  // seed, keys, qr
 
-    // flickable margin
-    property int flickableHeightMargin: 200
 
     property int layoutScale: {
         if(appWindow.width < 800){
@@ -148,18 +145,8 @@ Rectangle {
         property WizardModeBootstrap wizardModeBootstrapView: WizardModeBootstrap {}
         anchors.fill: parent
 
-        signal previousClicked;
-
         color: "transparent"
         state: ''
-
-        onPreviousClicked: {
-            if (previousView && previousView.viewName != null){
-                state = previousView.viewName;
-            } else {
-                state = "wizardHome";
-            }
-        }
 
         onCurrentViewChanged: {
             if (previousView) {
@@ -267,6 +254,7 @@ Rectangle {
             id: wizardFlickable
             anchors.fill: parent
             clip: true
+            boundsBehavior: isMac ? Flickable.DragAndOvershootBounds : Flickable.StopAtBounds
 
             ScrollBar.vertical: ScrollBar {
                 parent: wizardController
@@ -276,6 +264,7 @@ Rectangle {
                 anchors.topMargin: persistentSettings.customDecorations ? 60 : 10
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: persistentSettings.customDecorations ? 15 : 10
+                onActiveChanged: if (!active && !isMac) active = true
             }
 
             onFlickingChanged: {
@@ -375,9 +364,6 @@ Rectangle {
         // protecting wallet with password
         wizardController.m_wallet.setPassword(wizardController.walletOptionsPassword);
 
-        // Store password in session to be able to use password protected functions (e.g show seed)
-        appWindow.walletPassword = walletOptionsPassword
-
         // save to persistent settings
         persistentSettings.language = wizardController.language_language
         persistentSettings.locale   = wizardController.language_locale
@@ -389,6 +375,8 @@ Rectangle {
         persistentSettings.allow_background_mining = false
         persistentSettings.is_recovering = (wizardController.walletOptionsIsRecovering === undefined) ? false : wizardController.walletOptionsIsRecovering
         persistentSettings.is_recovering_from_device = (wizardController.walletOptionsIsRecoveringFromDevice === undefined) ? false : wizardController.walletOptionsIsRecoveringFromDevice
+
+        restart();
     }
 
     function recoveryWallet() {
@@ -540,20 +528,7 @@ Rectangle {
         if(isIOS)
             persistentSettings.wallet_path = persistentSettings.wallet_path.replace(moneroAccountsDir, "");
 
-        console.log(moneroAccountsDir);
-        console.log(fn);
-        console.log(persistentSettings.wallet_path);
-
-        passwordDialog.onAcceptedCallback = function() {
-            walletPassword = passwordDialog.password;
-            appWindow.initialize();
-        }
-        passwordDialog.onRejectedCallback = function() {
-            console.log("Canceled");
-            appWindow.viewState = "wizard";
-        }
-
-        passwordDialog.open(appWindow.usefulName(appWindow.walletPath()));
+        appWindow.openWallet();
     }
 
     Component.onCompleted: {

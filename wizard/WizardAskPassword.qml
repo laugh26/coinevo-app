@@ -87,7 +87,7 @@ ColumnLayout {
     }
 
     MoneroComponents.WarningBox {
-        text: qsTr("<b>Enter a strong password</b> (Using letters, numbers, and/or symbols).") + translationManager.emptyString
+        text: "<b>%1</b> (%2).".arg(qsTr("Enter a strong password")).arg(qsTr("Using letters, numbers, and/or symbols")) + translationManager.emptyString
     }
 
     ColumnLayout {
@@ -150,7 +150,7 @@ ColumnLayout {
             color: MoneroComponents.Style.defaultFontColor
         }
 
-        TextField {
+        MoneroComponents.Input {
             id: passwordInput
 
             Layout.topMargin: 6
@@ -180,14 +180,15 @@ ColumnLayout {
                 color: "transparent"
 
                 MoneroComponents.Label {
-                    fontSize: 20
+                    fontSize: 18
                     text: FontAwesome.lock
                     opacity: 0.5
-                    fontFamily: FontAwesome.fontFamily
+                    fontFamily: FontAwesome.fontFamilySolid
+                    styleName: "Solid"
                     anchors.right: parent.right
-                    anchors.rightMargin: 15
+                    anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: 3
+                    anchors.verticalCenterOffset: 1
                 }
             }
         }
@@ -207,7 +208,7 @@ ColumnLayout {
             color: MoneroComponents.Style.defaultFontColor
         }
 
-        TextField {
+        MoneroComponents.Input {
             id : passwordInputConfirm
             
             Layout.topMargin: 6
@@ -237,14 +238,15 @@ ColumnLayout {
                 color: "transparent"
 
                 MoneroComponents.Label {
-                    fontSize: 20
+                    fontSize: 18
                     text: FontAwesome.lock
                     opacity: 0.5
-                    fontFamily: FontAwesome.fontFamily
+                    fontFamily: FontAwesome.fontFamilySolid
+                    styleName: "Solid"
                     anchors.right: parent.right
-                    anchors.rightMargin: 15
+                    anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: 3
+                    anchors.verticalCenterOffset: 1
                 }
             }
         }

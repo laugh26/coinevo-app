@@ -36,19 +36,21 @@ greaterThan(GCC_VERSION_MAJOR, 9) | if(equals(GCC_VERSION_MAJOR, 9) : greaterTha
     }
 }
 
-# cleaning "auto-generated" bitmonero directory on "make distclean"
+# cleaning "auto-generated" coinevo directory on "make distclean"
 QMAKE_DISTCLEAN += -r $$WALLET_ROOT
 
 INCLUDEPATH +=  $$WALLET_ROOT/include \
                 $$PWD/src/libwalletqt \
                 $$PWD/src/QR-Code-generator \
                 $$PWD/src \
-                $$WALLET_ROOT/src
+                $$WALLET_ROOT/src \
+                $$WALLET_ROOT/external/easylogging++ \
+                $$WALLET_ROOT/contrib/epee/include
 
 HEADERS += \
-    filter.h \
-    clipboardAdapter.h \
-    oscursor.h \
+    src/main/filter.h \
+    src/main/clipboardAdapter.h \
+    src/main/oscursor.h \
     src/libwalletqt/WalletManager.h \
     src/libwalletqt/Wallet.h \
     src/libwalletqt/PendingTransaction.h \
@@ -57,8 +59,8 @@ HEADERS += \
     src/libwalletqt/QRCodeImageProvider.h \
     src/libwalletqt/Transfer.h \
     src/NetworkType.h \
-    oshelper.h \
-    TranslationManager.h \
+    src/main/oshelper.h \
+    src/TranslationManager.h \
     src/model/TransactionHistoryModel.h \
     src/model/TransactionHistorySortFilterModel.h \
     src/QR-Code-generator/BitBuffer.hpp \
@@ -72,8 +74,8 @@ HEADERS += \
     src/libwalletqt/SubaddressAccount.h \
     src/zxcvbn-c/zxcvbn.h \
     src/libwalletqt/UnsignedTransaction.h \
-    Logger.h \
-    MainApp.h \
+    src/main/Logger.h \
+    src/main/MainApp.h \
     src/qt/FutureScheduler.h \
     src/qt/ipc.h \
     src/qt/KeysFiles.h \
@@ -83,18 +85,18 @@ HEADERS += \
     src/qt/MoneroSettings.h \
     src/qt/TailsOS.h
 
-SOURCES += main.cpp \
-    filter.cpp \
-    clipboardAdapter.cpp \
-    oscursor.cpp \
+SOURCES += src/main/main.cpp \
+    src/main/filter.cpp \
+    src/main/clipboardAdapter.cpp \
+    src/main/oscursor.cpp \
     src/libwalletqt/WalletManager.cpp \
     src/libwalletqt/Wallet.cpp \
     src/libwalletqt/PendingTransaction.cpp \
     src/libwalletqt/TransactionHistory.cpp \
     src/libwalletqt/TransactionInfo.cpp \
     src/libwalletqt/QRCodeImageProvider.cpp \
-    oshelper.cpp \
-    TranslationManager.cpp \
+    src/main/oshelper.cpp \
+    src/TranslationManager.cpp \
     src/model/TransactionHistoryModel.cpp \
     src/model/TransactionHistorySortFilterModel.cpp \
     src/QR-Code-generator/BitBuffer.cpp \
@@ -108,8 +110,8 @@ SOURCES += main.cpp \
     src/libwalletqt/SubaddressAccount.cpp \
     src/zxcvbn-c/zxcvbn.c \
     src/libwalletqt/UnsignedTransaction.cpp \
-    Logger.cpp \
-    MainApp.cpp \
+    src/main/Logger.cpp \
+    src/main/MainApp.cpp \
     src/qt/FutureScheduler.cpp \
     src/qt/ipc.cpp \
     src/qt/KeysFiles.cpp \
@@ -131,13 +133,81 @@ CONFIG(DISABLE_PASS_STRENGTH_METER) {
 
 lupdate_only {
 SOURCES = *.qml \
-          components/*.qml \
-          components/effects/*.qml \
-          pages/*.qml \
-          pages/settings/*.qml \
-          pages/merchant/*.qml \
-          wizard/*.qml \
-          wizard/*js
+		  components/CheckBox.qml  \      
+		  components/LabelButton.qml  \     
+		  components/RadioButton.qml \
+		  components/CheckBox2.qml  \   
+		  components/LabelSubheader.qml  \  
+		  components/RemoteNodeEdit.qml \
+          components/LanguageSidebar.qml   \
+		  components/SettingsListItem.qml \
+		 components/ContextMenu.qml \        
+		 components/LineEdit.qml  \   
+		 components/StandardButton.qml \
+		 components/ContextMenuItem.qml  \  
+		 components/LineEditMulti.qml   \  
+		 components/StandardDialog.qml \
+		 components/DaemonManagerDialog.qml \
+		 components/MenuButton.qml  \
+		 components/StandardDropdown.qml \
+         components/DatePicker.qml  \
+		 components/MenuButtonDivider.qml \
+		 components/Style.qml \
+         components/NetworkStatusItem.qml \
+		 components/TextBlock.qml \
+         components/IconButton.qml   \       
+		  components/Notifier.qml   \       
+		  components/TextPlain.qml \
+          components/InlineButton.qml   \ 
+		  components/PasswordDialog.qml  \  
+		  components/TextPlainArea.qml \
+          components/Input.qml  \
+		  components/ProcessingSplash.qml \
+		  components/TipItem.qml \
+          components/InputDialog.qml \       
+		  components/ProgressBar.qml  \   
+		  components/TitleBar.qml \
+          components/InputMulti.qml \                         
+		  components/WarningBox.qml \
+          components/Label.qml  \         
+		  components/QRCodeScanner.qml \
+          components/effects/qml \
+		  pagess/ColorTransition.qml  \
+		  pages/GradientBackground.qml  \
+		  pages/ImageMask.qml \
+          pages/settings/qml \
+          pages/merchant/qml \
+          wizard/WizardAskPassword.qml \
+		  wizard/WizardController.qml \
+          wizard/WizardCreateDevice1.qml \
+          wizard/WizardCreateWallet1.qml \
+          wizard/WizardCreateWallet2.qml \
+          wizard/WizardCreateWallet3.qml \
+          wizard/WizardCreateWallet4.qml \
+          wizard/WizardDaemonSettings.qml \
+          wizard/WizardHeader.qml \
+          wizard/WizardHome.qml \
+		  wizard/WizardLang.qml \
+          wizard/WizardLanguage.qml \
+          wizard/WizardMenuItem.qml \
+          wizard/WizardModeBootstrap.qml \
+          wizard/WizardModeRemoteNodeWarning.qml \
+          wizard/WizardModeSelection.qml \
+          wizard/WizardNav.qml \
+          wizard/WizardNavProgressDot.qml \
+          wizard/WizardOpenWallet1.qml \
+          wizard/WizardRestoreWallet1.qml \
+          wizard/WizardRestoreWallet2.qml \
+          wizard/WizardRestoreWallet3.qml \
+          wizard/WizardRestoreWallet4.qml\
+          wizard/WizardSummary.qml\
+          wizard/WizardSummaryItem.qml \
+          wizard/WizardWalletInput.qml\
+          wizard/TxUtils.js \
+          js/Utils.js \
+          js/Windows.js \
+          js/Wizard.js
+
 }
 
 # Linker flags required by Trezor
@@ -176,8 +246,10 @@ android {
 
 
 
-QMAKE_CXXFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=1 -Wformat -Wformat-security
-QMAKE_CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=1 -Wformat -Wformat-security
+QMAKE_CXXFLAGS += -Werror -Wformat -Wformat-security
+QMAKE_CFLAGS += -Werror -Wformat -Wformat-security
+QMAKE_CXXFLAGS_RELEASE += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=1 -O2
+QMAKE_CFLAGS_RELEASE += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=1 -O2
 
 ios {
     message("Host is IOS")
@@ -299,7 +371,8 @@ win32 {
         -lssl \
         -lsodium \
         -lcrypto \
-        -lws2_32
+        -lws2_32 \
+        -lole32
     
     !contains(QMAKE_TARGET.arch, x86_64) {
         message("Target is 32bit")
@@ -352,7 +425,7 @@ linux {
             -lGL \
             -lX11
     }
-    # currently monero has an issue with "static" build and linunwind-dev,
+    # currently coinevo has an issue with "static" build and linunwind-dev,
     # so we link libunwind-dev only for non-Ubuntu distros
     CONFIG(libunwind_off) {
         message(Building without libunwind)
@@ -370,11 +443,29 @@ macx {
     #     message("using static libraries")
     #     LIBS+= -Wl,-Bstatic
     # }
+
+    OPENSSL_DIR = $$system(brew --prefix openssl, lines, EXIT_CODE)
+    !equals(EXIT_CODE, 0) {
+        OPENSSL_DIR = /usr/local/ssl
+    }
+    OPENSSL_LIBRARY_DIR = $$OPENSSL_DIR/lib
+    INCLUDEPATH += $$OPENSSL_DIR/include
+
+    BOOST_DIR = $$system(brew --prefix boost, lines, EXIT_CODE)
+    equals(EXIT_CODE, 0) {
+        INCLUDEPATH += $$BOOST_DIR/include
+    } else {
+        INCLUDEPATH += /usr/local/include
+    }
+
     QT += macextras
     OBJECTIVE_SOURCES += src/qt/macoshelper.mm
+    LIBS+= -Wl,-dead_strip
+    LIBS+= -Wl,-dead_strip_dylibs
+    LIBS+= -Wl,-bind_at_load
     LIBS+= \
         -L/usr/local/lib \
-        -L/usr/local/opt/openssl/lib \
+        -L$$OPENSSL_LIBRARY_DIR \
         -L/usr/local/opt/boost/lib \
         -lboost_serialization \
         -lboost_thread-mt \
@@ -492,7 +583,7 @@ linux:!android {
 }
 
 android{
-    deploy.commands += make install INSTALL_ROOT=$$DESTDIR && androiddeployqt --input android-libmonero-wallet-gui.so-deployment-settings.json --output $$DESTDIR --deployment bundled --android-platform android-21 --jdk /usr/lib/jvm/java-8-openjdk-amd64 -qmldir=$$PWD
+    deploy.commands += make install INSTALL_ROOT=$$DESTDIR && androiddeployqt --input android-libcoinevo-wallet-gui.so-deployment-settings.json --output $$DESTDIR --deployment bundled --android-platform android-21 --jdk /usr/lib/jvm/java-8-openjdk-amd64 -qmldir=$$PWD
 }
 
 
@@ -502,12 +593,19 @@ OTHER_FILES += \
 
 DISTFILES += \
     notes.txt \
-    monero/src/wallet/CMakeLists.txt
+    coinevo/src/wallet/CMakeLists.txt
 
+VERSION = $$cat('version.js', lines)
+VERSION = $$find(VERSION, 'GUI_VERSION')
+VERSION_LONG = $$replace(VERSION, '.*\"v(.*)\"', '\1') 
+VERSION = $$replace(VERSION, '.*(\d+\.\d+\.\d+\.\d+).*', '\1')
 
 # windows application icon
 RC_ICONS = images/appicon.ico
 
 # mac Info.plist & application icon
 QMAKE_INFO_PLIST = $$PWD/share/Info.plist
+macx {
+    QMAKE_POST_LINK += sed -i "''" -e "s/@VERSION@/$$VERSION/g" -e "s/@VERSION_LONG@/$$VERSION_LONG/g" "$$sprintf("%1/%2/%3.app", $$OUT_PWD, $$DESTDIR, $$TARGET)/Contents/Info.plist";
+}
 ICON = $$PWD/images/appicon.icns

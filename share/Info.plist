@@ -18,13 +18,22 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>coinevo-app</string>
+  <string>coinevo-wallet-gui</string>
   
   <key>CFBundleName</key>
-  <string>Coinevo App</string>
+  <string>Coinevo GUI</string>
+
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © 2014-2020 The Coinevo Project</string>
 
   <key>CFBundleIdentifier</key>
-  <string>org.coinevo.coinevo-app</string>
+  <string>org.coinevo-project.coinevo-wallet-gui</string>
+
+  <key>CFBundleVersion</key>
+  <string>@VERSION_LONG@</string>
+
+  <key>CFBundleShortVersionString</key>
+  <string>@VERSION@</string>
 
   <key>NSSupportsAutomaticGraphicsSwitching</key>
   <true/>
@@ -44,10 +53,10 @@
     </dict>
     <dict>
       <key>CFBundleURLName</key>
-      <string>moneroseed Handler</string>
+      <string>coinevoseed Handler</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>moneroseed</string>
+        <string>coinevoseed</string>
       </array>
     </dict>
   </array>

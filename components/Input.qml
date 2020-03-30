@@ -32,6 +32,7 @@ import QtQuick 2.9
 import "../components" as MoneroComponents
 
 TextField {
+    id: textField
     font.family: MoneroComponents.Style.fontRegular.name
     font.pixelSize: 18
     font.bold: true
@@ -43,5 +44,13 @@ TextField {
 
     background: Rectangle {
         color: "transparent"
+    }
+
+    MoneroComponents.ContextMenu {
+        cursorShape: Qt.IBeamCursor
+        onPaste: {
+            textField.clear();
+            textField.paste();
+        }
     }
 }

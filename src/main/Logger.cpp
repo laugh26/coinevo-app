@@ -34,19 +34,19 @@
 #include <QDebug>
 
 #include "Logger.h"
-#include "src/qt/TailsOS.h"
+#include "qt/TailsOS.h"
 #include "wallet/api/wallet2_api.h"
 
 // default log path by OS (should be writable)
-static const QString defaultLogName = "coinevo-app.log";
+static const QString defaultLogName = "coinevo-wallet-gui.log";
 #if defined(Q_OS_IOS)
     //AppDataLocation = "<APPROOT>/Library/Application Support"
     static const QString osPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(0);
-    static const QString appFolder = "coinevo-app";
+    static const QString appFolder = "coinevo-wallet-gui";
 #elif defined(Q_OS_WIN)
     //AppDataLocation = "C:/Users/<USER>/AppData/Roaming/<APPNAME>"
     static const QString osPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(0);
-    static const QString appFolder = "coinevo-app";
+    static const QString appFolder = "coinevo-wallet-gui";
 #elif defined(Q_OS_ANDROID)
     //AppDataLocation = "<USER>/<APPNAME>/files"
     static const QString osPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(1);

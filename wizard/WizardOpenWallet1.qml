@@ -45,7 +45,7 @@ Rectangle {
     color: "transparent"
     property alias pageHeight: pageRoot.height
     property string viewName: "wizardOpenWallet1"
-    property int walletCount: walletKeysFilesModel.rowCount()
+    property int walletCount: walletKeysFilesModel ? walletKeysFilesModel.rowCount() : 0
 
     ColumnLayout {
         id: pageRoot
@@ -69,7 +69,7 @@ Rectangle {
             }
 
             GridLayout {
-                visible: walletKeysFilesModel.rowCount() > 0
+                visible: (walletKeysFilesModel ? walletKeysFilesModel.rowCount() : 0) > 0
                 Layout.topMargin: 10
                 Layout.fillWidth: true
                 columnSpacing: 20
@@ -198,7 +198,7 @@ Rectangle {
                                     Layout.fillWidth: true
                                 }
 
-                                TextArea {
+                                Text {
                                     text: {
                                         // truncate on window width
                                         var maxLength = wizardController.layoutScale <= 1 ? 12 : 16
@@ -214,19 +214,13 @@ Rectangle {
                                     color: MoneroComponents.Style.defaultFontColor
                                     font.pixelSize: 16
 
-                                    selectionColor: MoneroComponents.Style.dimmedFontColor
-                                    selectedTextColor: MoneroComponents.Style.defaultFontColor
-
-                                    selectByMouse: false
                                     wrapMode: Text.WordWrap
-                                    textMargin: 0
                                     leftPadding: 0
                                     topPadding: networktype !== -1 ? 8 : 4
                                     bottomPadding: 0
-                                    readOnly: true
                                 }
 
-                                TextArea {
+                                Text {
                                     visible: networktype !== -1
                                     Layout.preferredHeight: 24
                                     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -236,16 +230,10 @@ Rectangle {
                                     color: MoneroComponents.Style.dimmedFontColor
                                     font.pixelSize: 14
 
-                                    selectionColor: MoneroComponents.Style.textSelectionColor
-                                    selectedTextColor: MoneroComponents.Style.textSelectedColor
-
-                                    selectByMouse: false
                                     wrapMode: Text.WordWrap
-                                    textMargin: 0
                                     leftPadding: 0
                                     topPadding: 0
                                     bottomPadding: 0
-                                    readOnly: true
                                 }
 
                                 Item {

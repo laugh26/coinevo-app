@@ -40,8 +40,8 @@ import "components/effects/" as MoneroEffects
 Rectangle {
     id: panel
 
-    property int currentAccountIndex: 0
-    property string currentAccountLabel: "Primary account"
+    property int currentAccountIndex
+    property alias currentAccountLabel: accountLabel.text
     property string balanceString: "?.??"
     property string balanceUnlockedString: "?.??"
     property string balanceFiatString: "?.??"
@@ -103,7 +103,7 @@ Rectangle {
         end: Qt.point(height, width)
     }
 
-    // card with monero logo
+    // card with coinevo logo
     Column {
         visible: true
         z: 2
@@ -184,7 +184,7 @@ Rectangle {
                 MoneroComponents.Label {
                     fontSize: 12
                     id: accountIndex
-                    text: qsTr("Account") + " #" + currentAccountIndex
+                    text: qsTr("Account") + translationManager.emptyString + " #" + currentAccountIndex
                     color: MoneroComponents.Style.blackTheme ? "white" : "black"
                     anchors.left: parent.left
                     anchors.leftMargin: 60
@@ -204,7 +204,6 @@ Rectangle {
                     fontSize: 16
                     id: accountLabel
                     textWidth: 170
-                    text: currentAccountLabel
                     color: MoneroComponents.Style.blackTheme ? "white" : "black"
                     anchors.left: parent.left
                     anchors.leftMargin: 60
@@ -238,7 +237,7 @@ Rectangle {
                     font.pixelSize: 16
                     text: {
                         if (persistentSettings.fiatPriceEnabled && persistentSettings.fiatPriceToggle) {
-                            return persistentSettings.fiatPriceCurrency == "evousd" ? "$" : "€"
+                            return appWindow.fiatApiCurrencySymbol();
                         } else {
                             return "EVO"
                         }
@@ -349,8 +348,9 @@ Rectangle {
             id:flicker
             contentHeight: menuColumn.height
             anchors.top: parent.top
-            anchors.bottom: networkStatus.top
+            anchors.bottom: progressBar.visible ? progressBar.top : networkStatus.top
             width: parent.width
+            boundsBehavior: isMac ? Flickable.DragAndOvershootBounds : Flickable.StopAtBounds
             clip: true
 
         Column {
@@ -365,7 +365,7 @@ Rectangle {
             MoneroComponents.MenuButtonDivider {
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- Account tab ---------------
@@ -375,7 +375,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Account") + translationManager.emptyString
                 symbol: qsTr("T") + translationManager.emptyString
-                dotColor: "#44AAFF"
                 onClicked: {
                     parent.previousButton.checked = false
                     parent.previousButton = accountButton
@@ -387,7 +386,7 @@ Rectangle {
                 visible: accountButton.present
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- Transfer tab ---------------
@@ -397,7 +396,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Send") + translationManager.emptyString
                 symbol: qsTr("S") + translationManager.emptyString
-                dotColor: "#FF6C3C"
                 onClicked: {
                     parent.previousButton.checked = false
                     parent.previousButton = transferButton
@@ -409,7 +407,7 @@ Rectangle {
                 visible: transferButton.present
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- AddressBook tab ---------------
@@ -420,7 +418,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Address book") + translationManager.emptyString
                 symbol: qsTr("B") + translationManager.emptyString
-                dotColor: "#FF4F41"
                 under: transferButton
                 onClicked: {
                     parent.previousButton.checked = false
@@ -433,7 +430,7 @@ Rectangle {
                 visible: addressBookButton.present
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- Receive tab ---------------
@@ -443,7 +440,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Receive") + translationManager.emptyString
                 symbol: qsTr("R") + translationManager.emptyString
-                dotColor: "#AAFFBB"
                 onClicked: {
                     parent.previousButton.checked = false
                     parent.previousButton = receiveButton
@@ -455,7 +451,7 @@ Rectangle {
                 visible: receiveButton.present
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- Merchant tab ---------------
@@ -467,7 +463,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Merchant") + translationManager.emptyString
                 symbol: qsTr("U") + translationManager.emptyString
-                dotColor: "#FF4F41"
                 under: receiveButton
                 onClicked: {
                     parent.previousButton.checked = false
@@ -480,7 +475,7 @@ Rectangle {
                 visible: merchantButton.present && appWindow.walletMode >= 2
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- History tab ---------------
@@ -491,7 +486,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Transactions") + translationManager.emptyString
                 symbol: qsTr("H") + translationManager.emptyString
-                dotColor: "#6B0072"
                 onClicked: {
                     parent.previousButton.checked = false
                     parent.previousButton = historyButton
@@ -503,7 +497,7 @@ Rectangle {
                 visible: historyButton.present
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- Advanced tab ---------------
@@ -514,7 +508,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Advanced") + translationManager.emptyString
                 symbol: qsTr("D") + translationManager.emptyString
-                dotColor: "#FFD781"
                 onClicked: {
                     parent.previousButton.checked = false
                     parent.previousButton = advancedButton
@@ -525,7 +518,7 @@ Rectangle {
                 visible: advancedButton.present && appWindow.walletMode >= 2
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- Mining tab ---------------
@@ -536,7 +529,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Mining") + translationManager.emptyString
                 symbol: qsTr("M") + translationManager.emptyString
-                dotColor: "#FFD781"
                 under: advancedButton
                 onClicked: {
                     parent.previousButton.checked = false
@@ -549,7 +541,7 @@ Rectangle {
                 visible: miningButton.present && appWindow.walletMode >= 2
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- TxKey tab ---------------
@@ -560,7 +552,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Prove/check") + translationManager.emptyString
                 symbol: qsTr("K") + translationManager.emptyString
-                dotColor: "#FFD781"
                 under: advancedButton
                 onClicked: {
                     parent.previousButton.checked = false
@@ -573,7 +564,7 @@ Rectangle {
                 visible: txkeyButton.present && appWindow.walletMode >= 2
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- Shared RingDB tab ---------------
@@ -584,7 +575,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Shared RingDB") + translationManager.emptyString
                 symbol: qsTr("G") + translationManager.emptyString
-                dotColor: "#FFD781"
                 under: advancedButton
                 onClicked: {
                     parent.previousButton.checked = false
@@ -597,7 +587,7 @@ Rectangle {
                 visible: sharedringdbButton.present && appWindow.walletMode >= 2
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- Sign/verify tab ---------------
@@ -608,7 +598,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Sign/verify") + translationManager.emptyString
                 symbol: qsTr("I") + translationManager.emptyString
-                dotColor: "#FFD781"
                 under: advancedButton
                 onClicked: {
                     parent.previousButton.checked = false
@@ -621,7 +610,7 @@ Rectangle {
                 visible: signButton.present && appWindow.walletMode >= 2
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
             // ------------- Settings tab ---------------
@@ -631,7 +620,6 @@ Rectangle {
                 anchors.right: parent.right
                 text: qsTr("Settings") + translationManager.emptyString
                 symbol: qsTr("E") + translationManager.emptyString
-                dotColor: "#36B25C"
                 onClicked: {
                     parent.previousButton.checked = false
                     parent.previousButton = settingsButton
@@ -643,7 +631,7 @@ Rectangle {
                 visible: settingsButton.present
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 16
+                anchors.leftMargin: 20
             }
 
         } // Column
@@ -656,20 +644,9 @@ Rectangle {
             anchors.right: parent.right
             anchors.leftMargin: 0
             anchors.rightMargin: 0
-            anchors.bottom: networkStatus.top;
+            anchors.bottom: progressBar.visible ? progressBar.top : networkStatus.top
             height: 10
             color: "transparent"
-        }
-
-        MoneroComponents.NetworkStatusItem {
-            id: networkStatus
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: 5
-            anchors.rightMargin: 0
-            anchors.bottom: (progressBar.visible)? progressBar.top : parent.bottom;
-            connected: Wallet.ConnectionStatus_Disconnected
-            height: 48
         }
 
         MoneroComponents.ProgressBar {
@@ -679,17 +656,29 @@ Rectangle {
             anchors.bottom: daemonProgressBar.top
             height: 48
             syncType: qsTr("Wallet") + translationManager.emptyString
-            visible: networkStatus.connected
+            visible: !appWindow.disconnected
         }
 
         MoneroComponents.ProgressBar {
             id: daemonProgressBar
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.bottom: parent.bottom
+            anchors.bottom: networkStatus.top
             syncType: qsTr("Daemon") + translationManager.emptyString
-            visible: networkStatus.connected
+            visible: !appWindow.disconnected
             height: 62
+        }
+        
+        MoneroComponents.NetworkStatusItem {
+            id: networkStatus
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 5
+            anchors.rightMargin: 0
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 5
+            connected: Wallet.ConnectionStatus_Disconnected
+            height: 48
         }
     }
 }

@@ -2,4 +2,4 @@
 
 set QMLSCENE_DEVICE=softwarecontext
 
-start /b coinevo-app.exe
+start /b coinevo-wallet-gui.exe

@@ -58,7 +58,7 @@ Rectangle {
             spacing: 0
 
             WizardHeader {
-                title: qsTr("Mode selection.") + translationManager.emptyString
+                title: qsTr("Mode selection") + translationManager.emptyString
                 subtitle: qsTr("Please select the statement that best matches you.") + translationManager.emptyString
             }
 
@@ -138,13 +138,14 @@ Rectangle {
 
             WizardNav {
                 Layout.topMargin: 5
-                btnPrevText: qsTr("Change language") + translationManager.emptyString
+                btnPrevText: qsTr("Back to menu") + translationManager.emptyString
                 btnNext.visible: false
                 progressSteps: 0
+                autoTransition: false
 
                 onPrevClicked: {
-                    wizardController.wizardStackView.backTransition = true;
-                    wizardController.wizardState = 'wizardLanguage';
+                    wizardController.wizardStackView.backTransition = !wizardController.wizardStackView.backTransition;
+                    wizardController.wizardState = wizardController.wizardStackView.backTransition ? 'wizardLanguage' : 'wizardHome';
                 }
             }
         }

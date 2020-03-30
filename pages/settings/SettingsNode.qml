@@ -36,8 +36,8 @@ import "../../components/effects" as MoneroEffects
 
 Rectangle{
     color: "transparent"
-    height: 1400
     Layout.fillWidth: true
+    property alias nodeHeight: root.height
 
     /* main layout */
     ColumnLayout {
@@ -50,10 +50,6 @@ Rectangle{
         anchors.right: parent.right
 
         spacing: 0
-        property int labelWidth: 120
-        property int editWidth: 400
-        property int lineEditFontSize: 14
-        property int buttonWidth: 110
 
         Rectangle {
             Layout.fillWidth: true
@@ -119,7 +115,7 @@ Rectangle{
                     text: qsTr("Local node") + translationManager.emptyString
                 }
 
-                TextArea {
+                Text {
                     id: localNodeArea
                     anchors.top: localNodeHeader.bottom
                     anchors.topMargin: 4
@@ -129,14 +125,11 @@ Rectangle{
                     font.family: MoneroComponents.Style.fontRegular.name
                     font.pixelSize: 15
                     horizontalAlignment: TextInput.AlignLeft
-                    selectByMouse: false
                     wrapMode: Text.WordWrap;
-                    textMargin: 0
                     leftPadding: 0
                     topPadding: 0
                     text: qsTr("The blockchain is downloaded to your computer. Provides higher security and requires more local storage.") + translationManager.emptyString
                     width: parent.width - (localNodeIcon.width + localNodeIcon.anchors.leftMargin + anchors.leftMargin)
-                    readOnly: true
 
                     // @TODO: Legacy. Remove after Qt 5.8.
                     // https://stackoverflow.com/questions/41990013
@@ -221,7 +214,7 @@ Rectangle{
                     text: qsTr("Remote node") + translationManager.emptyString
                 }
 
-                TextArea {
+                Text {
                     id: remoteNodeArea
                     anchors.top: remoteNodeHeader.bottom
                     anchors.topMargin: 4
@@ -230,16 +223,12 @@ Rectangle{
                     color: MoneroComponents.Style.dimmedFontColor
                     font.family: MoneroComponents.Style.fontRegular.name
                     font.pixelSize: 15
-                    activeFocusOnPress: false
                     horizontalAlignment: TextInput.AlignLeft
-                    selectByMouse: false
                     wrapMode: Text.WordWrap;
-                    textMargin: 0
                     leftPadding: 0
                     topPadding: 0
                     text: qsTr("Uses a third-party server to connect to the Coinevo network. Less secure, but easier on your computer.") + translationManager.emptyString
                     width: parent.width - (remoteNodeIcon.width + remoteNodeIcon.anchors.leftMargin + anchors.leftMargin)
-                    readOnly: true
 
                     // @TODO: Legacy. Remove after Qt 5.8.
                     // https://stackoverflow.com/questions/41990013
@@ -253,7 +242,6 @@ Rectangle{
                     cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
                     onClicked: {
-                        persistentSettings.useRemoteNode = true;
                         appWindow.connectRemoteNode();
                     }
                 }
@@ -283,7 +271,7 @@ Rectangle{
             MoneroComponents.WarningBox {
                 Layout.topMargin: 26
                 Layout.bottomMargin: 6
-                text: qsTr("To find a remote node, ask on IRC #Coinevo.") + translationManager.emptyString
+                text: qsTr("To find a remote node, type 'Coinevo remote node' into your favorite search engine. Please ensure the node is run by a trusted third-party.") + translationManager.emptyString
             }
 
             MoneroComponents.RemoteNodeEdit {
@@ -393,15 +381,13 @@ Rectangle{
                     fontSize: 15
                     labelFontSize: 14
                     property string style: "<style type='text/css'>a {cursor:pointer;text-decoration: none; color: #FF6C3C}</style>"
-                    labelText: qsTr("Blockchain location") + style + qsTr(" <a href='#'> (change)</a>") + translationManager.emptyString
+                    labelText: qsTr("Blockchain location") + style + " <a href='#'> (%1)</a>".arg(qsTr("Change")) + translationManager.emptyString
+                    labelButtonText: qsTr("Reset") + translationManager.emptyString
+                    labelButtonVisible: text
                     placeholderText: qsTr("(default)") + translationManager.emptyString
                     placeholderFontSize: 15
                     readOnly: true
-                    text: {
-                        if(persistentSettings.blockchainDataDir.length > 0){
-                            return persistentSettings.blockchainDataDir;
-                        } else { return "" }
-                    }
+                    text: persistentSettings.blockchainDataDir
                     addressValidation: false
                     onInputLabelLinkActivated: {
                         //mouse.accepted = false
@@ -411,6 +397,7 @@ Rectangle{
                         blockchainFileDialog.open();
                         blockchainFolder.focus = true;
                     }
+                    onLabelButtonClicked: persistentSettings.blockchainDataDir = ""
                 }
             }
 

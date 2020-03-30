@@ -168,23 +168,6 @@ Rectangle {
             }	
         ]
 
-    // color stripe at the top
-    Row {
-        id: styledRow
-        visible: currentView !== merchantView
-        height: 4
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        z: parent.z + 1
-
-        Rectangle { height: 4; width: parent.width / 5; color: "#FFE00A" }
-        Rectangle { height: 4; width: parent.width / 5; color: "#6B0072" }
-        Rectangle { height: 4; width: parent.width / 5; color: "#FF6C3C" }
-        Rectangle { height: 4; width: parent.width / 5; color: "#FFD781" }
-        Rectangle { height: 4; width: parent.width / 5; color: "#FF4F41" }
-    }
-
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: {
@@ -195,6 +178,7 @@ Rectangle {
         }
 
         anchors.topMargin: appWindow.persistentSettings.customDecorations ? 50 : 0
+        anchors.bottomMargin: 0
         spacing: 0
 
         Flickable {
@@ -202,6 +186,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            boundsBehavior: isMac ? Flickable.DragAndOvershootBounds : Flickable.StopAtBounds
 
             ScrollBar.vertical: ScrollBar {
                 parent: root
@@ -211,6 +196,7 @@ Rectangle {
                 anchors.topMargin: persistentSettings.customDecorations ? 60 : 10
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: persistentSettings.customDecorations ? 15 : 10
+                onActiveChanged: if (!active && !isMac) active = true
             }
 
             onFlickingChanged: {
@@ -253,7 +239,7 @@ Rectangle {
     Rectangle {
         id: borderLeft
         visible: middlePanel.state !== "Merchant"
-        anchors.top: styledRow.bottom
+        anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         width: 1

@@ -67,7 +67,7 @@ Rectangle {
         width: parent.width - 100
         anchors.horizontalCenter: parent.horizontalCenter;
 
-        TextArea {
+        Text {
             text: qsTr("Language settings") + translationManager.emptyString
             Layout.fillWidth: true
             font.family: MoneroComponents.Style.fontRegular.name
@@ -80,24 +80,18 @@ Rectangle {
                 }
             }
 
-            selectionColor: MoneroComponents.Style.textSelectionColor
-            selectedTextColor: MoneroComponents.Style.textSelectedColor
-
-            selectByMouse: true
             wrapMode: Text.WordWrap
-            textMargin: 0
             leftPadding: 0
             topPadding: 0
             bottomPadding: 0
-            readOnly: true
         }
 
-        TextArea {
+        Text {
             Layout.fillWidth: true
             visible: parent.subtitle !== ""
 
             color: MoneroComponents.Style.dimmedFontColor
-            text: qsTr("Change the language of the Coinevo App.") + translationManager.emptyString
+            text: qsTr("Change the language of the Coinevo GUI.") + translationManager.emptyString
 
             font.family: MoneroComponents.Style.fontRegular.name
             font.pixelSize: {
@@ -108,15 +102,9 @@ Rectangle {
                 }
             }
 
-            selectionColor: MoneroComponents.Style.textSelectionColor
-            selectedTextColor: MoneroComponents.Style.textSelectedColor
-
-            selectByMouse: true
             wrapMode: Text.WordWrap
-            textMargin: 0
             leftPadding: 0
             topPadding: 0
-            readOnly: true
         }
 
         Flow {
@@ -190,7 +178,7 @@ Rectangle {
                             // set wizard language settings
                             wizard.language_locale = locale;
                             wizard.language_wallet = wallet_language;
-                            wizard.language_language = display_name + " (" + locale_spl[1] + ") ";
+                            wizard.language_language = display_name;
 
                             appWindow.showStatusMessage(qsTr("Language changed."), 3);
                             appWindow.toggleLanguageView();

@@ -1,21 +1,21 @@
 // Copyright (c) 2014-2018, The Monero Project
-// 
+//
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -30,7 +30,6 @@
 #include <QQmlApplicationEngine>
 #include <QtQml>
 #include <QStandardPaths>
-#include <QNetworkAccessManager>
 #include <QIcon>
 #include <QDebug>
 #include <QDesktopServices>
@@ -64,9 +63,9 @@
 #include "MainApp.h"
 #include "qt/ipc.h"
 #include "qt/utils.h"
-#include "src/qt/TailsOS.h"
-#include "src/qt/KeysFiles.h"
-#include "src/qt/MoneroSettings.h"
+#include "qt/TailsOS.h"
+#include "qt/KeysFiles.h"
+#include "qt/MoneroSettings.h"
 #include "qt/prices.h"
 
 // IOS exclusions
@@ -75,7 +74,58 @@
 #endif
 
 #ifdef WITH_SCANNER
-#include "QrCodeScanner.h"
+#include "QR-Code-scanner/QrCodeScanner.h"
+#endif
+
+#ifdef MONERO_GUI_STATIC
+
+#include <QtPlugin>
+#if defined(Q_OS_OSX)
+  Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+#elif defined(Q_OS_WIN)
+  Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
+#elif defined(Q_OS_LINUX)
+  Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
+#endif
+Q_IMPORT_PLUGIN(QSvgIconPlugin)
+Q_IMPORT_PLUGIN(QGifPlugin)
+Q_IMPORT_PLUGIN(QICNSPlugin)
+Q_IMPORT_PLUGIN(QICOPlugin)
+Q_IMPORT_PLUGIN(QJpegPlugin)
+Q_IMPORT_PLUGIN(QMngPlugin)
+Q_IMPORT_PLUGIN(QSvgPlugin)
+Q_IMPORT_PLUGIN(QTgaPlugin)
+Q_IMPORT_PLUGIN(QTiffPlugin)
+Q_IMPORT_PLUGIN(QWbmpPlugin)
+Q_IMPORT_PLUGIN(QWebpPlugin)
+Q_IMPORT_PLUGIN(QQmlDebuggerServiceFactory)
+Q_IMPORT_PLUGIN(QQmlInspectorServiceFactory)
+Q_IMPORT_PLUGIN(QLocalClientConnectionFactory)
+Q_IMPORT_PLUGIN(QDebugMessageServiceFactory)
+Q_IMPORT_PLUGIN(QQmlNativeDebugConnectorFactory)
+Q_IMPORT_PLUGIN(QQmlNativeDebugServiceFactory)
+Q_IMPORT_PLUGIN(QQmlProfilerServiceFactory)
+Q_IMPORT_PLUGIN(QQuickProfilerAdapterFactory)
+Q_IMPORT_PLUGIN(QQmlDebugServerFactory)
+Q_IMPORT_PLUGIN(QTcpServerConnectionFactory)
+Q_IMPORT_PLUGIN(QGenericEnginePlugin)
+
+Q_IMPORT_PLUGIN(QtQuick2Plugin)
+Q_IMPORT_PLUGIN(QtQuickLayoutsPlugin)
+Q_IMPORT_PLUGIN(QtGraphicalEffectsPlugin)
+Q_IMPORT_PLUGIN(QtGraphicalEffectsPrivatePlugin)
+Q_IMPORT_PLUGIN(QtQuick2WindowPlugin)
+Q_IMPORT_PLUGIN(QtQuickControls1Plugin)
+Q_IMPORT_PLUGIN(QtQuick2DialogsPlugin)
+Q_IMPORT_PLUGIN(QmlFolderListModelPlugin)
+Q_IMPORT_PLUGIN(QmlSettingsPlugin)
+Q_IMPORT_PLUGIN(QtQuick2DialogsPrivatePlugin)
+Q_IMPORT_PLUGIN(QtQuick2PrivateWidgetsPlugin)
+Q_IMPORT_PLUGIN(QtQuickControls2Plugin)
+Q_IMPORT_PLUGIN(QtQuickTemplates2Plugin)
+Q_IMPORT_PLUGIN(QmlXmlListModelPlugin)
+Q_IMPORT_PLUGIN(QMultimediaDeclarativeModule)
+
 #endif
 
 bool isIOS = false;
@@ -113,24 +163,21 @@ int main(int argc, char *argv[])
         isOpenGL = false;
 
     // disable "QApplication: invalid style override passed" warning
-    if (isDesktop) putenv((char*)"QT_STYLE_OVERRIDE=fusion");
+    if (isDesktop) qputenv("QT_STYLE_OVERRIDE", "fusion");
 #ifdef Q_OS_LINUX
     // force platform xcb
-    if (isDesktop) putenv((char*)"QT_QPA_PLATFORM=xcb");
+    if (isDesktop) qputenv("QT_QPA_PLATFORM", "xcb");
 #endif
 
-//    // Enable high DPI scaling on windows & linux
-//#if !defined(Q_OS_ANDROID) && QT_VERSION >= 0x050600
-//    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-//    qDebug() << "High DPI auto scaling - enabled";
-//#endif
+    // enable High DPI scaling
+    qputenv("QT_ENABLE_HIGHDPI_SCALING", "1");
 
     // Turn off colors in monerod log output.
     qputenv("TERM", "goaway");
 
     MainApp app(argc, argv);
 
-    app.setApplicationName("coinevo-app");
+    app.setApplicationName("coinevo-core");
     app.setOrganizationDomain("coinevo.tech");
     app.setOrganizationName("coinevo-project");
 
@@ -174,7 +221,10 @@ int main(int argc, char *argv[])
         QCoreApplication::translate("main", "Log to specified file"),
         QCoreApplication::translate("main", "file"));
 
+    QCommandLineOption testQmlOption("test-qml");
+    testQmlOption.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(logPathOption);
+    parser.addOption(testQmlOption);
     parser.addHelpOption();
     parser.process(app);
 
@@ -182,7 +232,7 @@ int main(int argc, char *argv[])
 
     // Log settings
     const QString logPath = getLogPath(parser.value(logPathOption));
-    Monero::Wallet::init(argv[0], "coinevo-app", logPath.toStdString().c_str(), true);
+    Monero::Wallet::init(argv[0], "coinevo-wallet-gui", logPath.toStdString().c_str(), true);
     qInstallMessageHandler(messageHandler);
 
     // loglevel is configured in main.qml. Anything lower than
@@ -218,7 +268,7 @@ int main(int argc, char *argv[])
     // screen settings
     // Mobile is designed on 128dpi
     qreal ref_dpi = 128;
-    QRect geo = QApplication::desktop()->availableGeometry();
+    QRect geo = QGuiApplication::primaryScreen()->availableGeometry();
     QRect rect = QGuiApplication::primaryScreen()->geometry();
     qreal dpi = QGuiApplication::primaryScreen()->logicalDotsPerInch();
     qreal physicalDpi = QGuiApplication::primaryScreen()->physicalDotsPerInch();
@@ -239,7 +289,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    qWarning().nospace().noquote() << "Qt:" << QT_VERSION_STR << " App:" << GUI_VERSION
+    qWarning().nospace().noquote() << "Qt:" << QT_VERSION_STR << " GUI:" << GUI_VERSION
                                    << " | screen: " << rect.width() << "x" << rect.height()
                                    << " - dpi: " << dpi << " - ratio:" << calculated_ratio;
 
@@ -342,8 +392,7 @@ int main(int argc, char *argv[])
 
 // Exclude daemon manager from IOS
 #ifndef Q_OS_IOS
-    const QStringList arguments = (QStringList) QCoreApplication::arguments().at(0);
-    DaemonManager * daemonManager = DaemonManager::instance(&arguments);
+    DaemonManager * daemonManager = DaemonManager::instance();
     engine.rootContext()->setContextProperty("daemonManager", daemonManager);
 #endif
 
@@ -387,8 +436,7 @@ int main(int argc, char *argv[])
 #endif
     engine.rootContext()->setContextProperty("builtWithScanner", builtWithScanner);
 
-    QNetworkAccessManager *manager = new QNetworkAccessManager();
-    Prices prices(manager);
+    Prices prices;
     engine.rootContext()->setContextProperty("Prices", &prices);
 
     // Load main window (context properties needs to be defined obove this line)
@@ -404,6 +452,10 @@ int main(int argc, char *argv[])
         qCritical() << "Error: no root objects";
         return 1;
     }
+
+    // QML loaded successfully.
+    if (parser.isSet(testQmlOption))
+        return 0;
 
 #ifdef WITH_SCANNER
     QObject *qmlCamera = rootObject->findChild<QObject*>("qrCameraQML");
